@@ -1,0 +1,74 @@
+name: Update OpenAPI specs to latest
+on: [workflow_call, workflow_dispatch]
+
+jobs:
+  update-to-latest:
+    name: "Update specs to latest"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OpenAPI
+        uses: actions/checkout@v3
+
+      - name: "Set up Python 3.11"
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install OS packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --allow-downgrades libsnappy-dev jq postgresql-14=14.13-0ubuntu0* postgresql-client postgresql-plpython3 libvirt-dev
+
+      - name: Checkout Community
+        uses: actions/checkout@v4
+        with:
+          repository: localstack/localstack
+          path: localstack
+
+      - name: Checkout Pro
+        uses: actions/checkout@v4
+        with:
+          repository: localstack/localstack-ext
+          path: localstack-ext
+          token: ${{ secrets.PRO_GITHUB_TOKEN }}
+
+      - name: Install Python Dependencies for Pro
+        working-directory: localstack-ext
+        run: make install
+ 
+      - name: Link Community into Pro venv
+        working-directory: localstack-ext
+        run: |
+          source .venv/bin/activate
+          pip install -e ../localstack[runtime,test]
+
+      - name: Create Community Entrypoints
+        working-directory: localstack
+        # Entrypoints need to be generated _after_ the community edition has been linked into the venv
+        run: |
+          VENV_DIR="../localstack-ext/.venv" make entrypoints
+
+      - name: Create Pro Entrypoints
+        working-directory: localstack-ext
+        run: |
+          make entrypoints
+
+      - name: Generate the latest spec
+        run: |
+          source localstack-ext/.venv/bin/activate
+          python bin/update_latest.py
+      
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "Update latest OpenAPI spec"
+          body: "This PR update the latest version of the LocalStack's OpenAPI spec."
+          branch: "update-latest"
+          author: "LocalStack Bot <localstack-bot@users.noreply.github.com>"
+          committer: "LocalStack Bot <localstack-bot@users.noreply.github.com>"
+          commit-message: "Update latest OpenAPI spec"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reviewers: giograno
+          add-paths: |
+            openapi/*.yml
