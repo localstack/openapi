@@ -1,5 +1,8 @@
 name: Update OpenAPI specs to latest
-on: [workflow_call, workflow_dispatch]
+on: 
+  repository_dispatch:
+    types: [openapi-update]
+  workflow_dispatch:
 
 jobs:
   update-to-latest:
