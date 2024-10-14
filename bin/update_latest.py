@@ -5,7 +5,7 @@ import yaml
 
 from localstack.utils.openapi import get_localstack_openapi_spec
 
-openapi_path = Path(os.path.dirname(__file__)) / ".." / "openapi" / "localstack-spec-latest.yml"
+openapi_path = Path(os.path.dirname(__file__)) / ".." / "openapi" / "emulators"/ "localstack-spec-latest.yml"
 
 
 def main():
