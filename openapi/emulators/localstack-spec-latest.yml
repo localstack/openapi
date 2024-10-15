@@ -438,6 +438,30 @@ components:
           type: integer
           description: Network latency in milliseconds. By default, 0 is used.
           minimum: 0
+    PodRemote:
+      type: object
+      description: Details of a pod remote
+      properties:
+        name:
+          type: string
+          description: Name of the remote.
+        protocols:
+          type: array
+          items:
+            type: string
+          description: Supported protocols of the remote.
+        token:
+          type: object
+          description: The token for this remote.
+        url:
+          type: string
+          description: URL of the remote server.
+        example:
+          name: example_remote
+          protocols:
+          - http
+          - https
+          remote_url: https://example.com
 paths:
   /_aws/cloudwatch/metrics/raw:
     get:
@@ -1430,22 +1454,7 @@ paths:
                   remotes:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: Name of the remote.
-                        protocols:
-                          type: array
-                          items:
-                            type: string
-                          description: Supported protocols of the remote.
-                        token:
-                          type: object
-                          description: The token for this remote.
-                        url:
-                          type: string
-                          description: URL of the remote server.
+                      $ref: '#/components/schemas/PodRemote'
   /_localstack/pods/remotes/{name}:
     get:
       summary: Get a specific remote
@@ -1467,25 +1476,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    description: Name of the remote.
-                  protocols:
-                    type: array
-                    items:
-                      type: string
-                    description: Supported protocols of the remote.
-                  remote:
-                    type: string
-                    description: URL of the remote server.
-              example:
-                name: example_remote
-                protocols:
-                - http
-                - https
-                remote_url: https://example.com
+                $ref: '#/components/schemas/PodRemote'
     post:
       summary: Create a new remote
       description: Creates a new remote with the specified name and configuration.
