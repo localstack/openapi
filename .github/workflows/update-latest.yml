@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout OpenAPI
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: "Set up Python 3.11"
         id: setup-python
@@ -25,11 +25,32 @@ jobs:
 
       - name: Checkout Community
         uses: actions/checkout@v4
+        id: community-checkout
+        continue-on-error: true
+        with:
+          repository: localstack/localstack
+          path: localstack
+          ref: ${{ github.event.client_payload.ref }}
+  
+      - name: Community - fallback to main branch
+        if: steps.community-checkout.outcome == 'failure'
+        uses: actions/checkout@v4
         with:
           repository: localstack/localstack
           path: localstack
 
       - name: Checkout Pro
+        uses: actions/checkout@v4
+        id: pro-checkout
+        continue-on-error: true
+        with:
+          repository: localstack/localstack-ext
+          path: localstack-ext
+          token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          ref: ${{ github.event.client_payload.ref }}
+          
+      - name: Pro - fallback to master branch
+        if: steps.pro-checkout.outcome == 'failure'
         uses: actions/checkout@v4
         with:
           repository: localstack/localstack-ext
@@ -66,7 +87,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           title: "Update latest OpenAPI spec"
-          body: "This PR update the latest version of the LocalStack's OpenAPI spec."
+          body: "This PR updates the latest version of the LocalStack's OpenAPI spec."
           branch: "update-latest"
           author: "LocalStack Bot <localstack-bot@users.noreply.github.com>"
           committer: "LocalStack Bot <localstack-bot@users.noreply.github.com>"
