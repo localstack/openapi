@@ -1327,6 +1327,101 @@ paths:
       tags:
       - pro
       - aws
+  /_aws/pinpoint/{application_id}/{reference_id}:
+    get:
+      description: Retrieve Pinpoint OTP code
+      tags:
+      - pro
+      - aws
+      parameters:
+      - name: application_id
+        in: path
+        required: true
+        description: Pinpoint application ID
+        schema:
+          type: string
+      - name: reference_id
+        in: path
+        required: true
+        description: Reference ID that was used in SentOTPMessage
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OTP message details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - AllowedAttempts
+                - CodeLength
+                - DestinationIdentity
+                - ReferenceId
+                - OriginationIdentity
+                - ValidityPeriod
+                - Attempts
+                - ApplicationId
+                - CreatedTimestamp
+                - Code
+                properties:
+                  AllowedAttempts:
+                    type: integer
+                    maximum: 5
+                    description: Maximum number of allowed attempts for OTP validation.
+                  BrandName:
+                    type: string
+                    description: Name of the brand that is associated with the OTP
+                      code.
+                  CodeLength:
+                    type: integer
+                    minimum: 5
+                    maximum: 8
+                    description: Number of digits in the OTP code that was sent.
+                  DestinationIdentity:
+                    type: string
+                    description: Phone number that the OTP code was sent to.
+                  EntityId:
+                    type: string
+                    description: ID registered with the regulatory agency (India only).
+                  Language:
+                    type: string
+                    description: Language used when sending the message.
+                  OriginationIdentity:
+                    type: string
+                    description: Identity (e.g. short code) that is used to send the
+                      OTP code.
+                  ReferenceId:
+                    type: string
+                    minLength: 1
+                    maxLength: 48
+                    description: Unique reference ID that was used in the SendOTPMessage
+                      request.
+                  TemplateId:
+                    type: string
+                    description: ID that is registered with the regulatory agency
+                      (India only).
+                  ValidityPeriod:
+                    type: integer
+                    maximum: 60
+                    description: Time in minutes the OTP code is valid for.
+                  Attempts:
+                    type: string
+                    minimum: 0
+                    description: OTP validation attempts made so far.
+                  ApplicationId:
+                    type: string
+                    description: Identifier of the Pinpoint Application.
+                  CreatedTimestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the SendOTPMessage request.
+                  Code:
+                    type: string
+                    minLength: 5
+                    maxLength: 8
+                    description: One-time password.
   /_localstack/chaos/effects:
     post:
       summary: Configure network effects
