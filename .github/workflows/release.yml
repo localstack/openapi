@@ -1,0 +1,81 @@
+name: Release OpenAPI spec
+on:
+  repository_dispatch:
+    types: [release-openapi]
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        required: true
+        type: string
+        description: The version to be released
+
+env:
+  git_user_name: localstack[bot]
+  git_user_email: localstack-bot@users.noreply.github.com
+
+jobs:
+  release-localstack-openapi:
+    runs-on: buildjet-2vcpu-ubuntu-2204
+    env:
+      release: ${{ github.event_name == 'workflow_dispatch' && inputs.releaseVersion || github.event.client_payload.version}}
+
+    steps:
+      - name: "Checkout OpenAPI repo"
+        uses: actions/checkout@v4
+
+      - name: "Install release helper"
+        run: |
+          mkdir -p bin
+          curl -o bin/release-helper.sh -L https://api.github.com/repos/localstack/localstack/contents/bin/release-helper.sh -H 'Accept: application/vnd.github.v3.raw'
+          chmod +x bin/release-helper.sh
+
+      - name: "Prepare git config"
+        run: |
+          git config user.name ${{ env.git_user_name }}
+          git config user.email ${{ env.git_user_email }}
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: "Wait for localstack, localstack-core, and localstack-ext release to appear"
+        timeout-minutes: 3
+        run: |
+          bin/release-helper.sh pip-download-retry localstack ${{ env.release }}
+          bin/release-helper.sh pip-download-retry localstack-core ${{ env.release }}
+          bin/release-helper.sh pip-download-retry localstack-ext ${{ env.release }}
+
+      - name: "Install LocalStack and LocalStack-ext"
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install localstack==${{ env.release }}
+          pip install localstack-core==${{ env.release }}
+          pip install localstack-ext==${{ env.release }}
+
+      - name: "Create tagged LocalStack OpenAPI spec"
+        run: |
+          source .venv/bin/activate
+          pip install click
+          pip install pyyaml
+          python bin/update-aws-spec.py
+
+      - name: "Commit release version"
+        run: |
+          DEPENDENCY_FILE="openapi/" bin/release-helper.sh git-commit-release ${{ env.release }}
+          git push --follow-tags
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ env.release }}
+          files: |
+            openapi/emulators/*${{ env.release }}*.yml
+          draft: true
+
+      - name: "Show git modifications"
+        run: |
+          git log --oneline -n 2
+          git show HEAD
