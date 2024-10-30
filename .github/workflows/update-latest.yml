@@ -81,7 +81,7 @@ jobs:
       - name: Generate the latest spec
         run: |
           source localstack-ext/.venv/bin/activate
-          python bin/update_latest.py
+          python bin/update_aws_spec.py --latest
       
       - name: Create PR
         uses: peter-evans/create-pull-request@v7
