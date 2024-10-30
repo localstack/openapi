@@ -16,7 +16,11 @@ def update_aws_spec(latest: bool) -> None:
     in a file at a given path.
     """
     version = "latest" if latest else ls_version
-    openapi_path = Path(os.path.dirname(__file__)) / ".." / "openapi" / "emulators"/ f"localstack-spec-{version}.yml"
+    base_path = Path(os.path.dirname(__file__)) / ".." / "openapi" / "emulators"
+    if latest:
+        openapi_path = base_path / "localstack-spec-latest.yml"
+    else:
+        openapi_path = base_path / "localstack-spec.yml"
     spec = get_localstack_openapi_spec()
     spec["info"]["version"] = version
     if not openapi_path.parent.exists():

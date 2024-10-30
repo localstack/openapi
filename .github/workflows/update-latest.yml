@@ -81,7 +81,6 @@ jobs:
       - name: Generate the latest spec
         run: |
           source localstack-ext/.venv/bin/activate
-          pip install click
           python bin/update_aws_spec.py --latest
       
       - name: Create PR
