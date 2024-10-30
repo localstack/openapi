@@ -15,7 +15,7 @@ env:
 
 jobs:
   release-localstack-openapi:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       release: ${{ github.event_name == 'workflow_dispatch' && inputs.releaseVersion || github.event.client_payload.releaseVersion}}
 
