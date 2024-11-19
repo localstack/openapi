@@ -635,12 +635,35 @@ components:
         url:
           type: string
           description: URL of the remote server.
-        example:
-          name: example_remote
-          protocols:
-          - http
-          - https
-          remote_url: https://example.com
+      example:
+        name: example_remote
+        protocols:
+        - http
+        - https
+        url: https://example.com
+    IamConfig:
+      type: object
+      description: IAM Config
+      properties:
+        state:
+          type: string
+          description: Engine state
+          enum:
+          - DISABLED
+          - ENGINE_ONLY
+          - SOFT_MODE
+          - ENFORCED
+          example: ENFORCED
+        config_enforce_iam:
+          type: boolean
+          description: Whether the ENFORCE_IAM flag was set on startup of LocalStack.
+          readOnly: true
+          example: true
+        config_iam_soft_mode:
+          type: boolean
+          description: Supported protocols of the remote.
+          readOnly: true
+          example: false
 paths:
   /_aws/cloudwatch/metrics/raw:
     get:
@@ -1417,6 +1440,35 @@ paths:
       tags:
       - pro
       - aws
+  /_aws/iam/config:
+    get:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      responses:
+        200:
+          description: Successful retrieval of configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IamConfig'
+    post:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IamConfig'
+      responses:
+        200:
+          description: Successful setting of the new configuration.
+        400:
+          description: Bad request.
   /_aws/iot/LocalStackIoTRootCA.pem:
     get:
       description: Retrieve certificate for LocalStack IoT root certificate authority
