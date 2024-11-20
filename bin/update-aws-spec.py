@@ -8,6 +8,20 @@ from localstack.version import version as ls_version
 
 import click
 
+
+def str_presenter(dumper, data):
+    """
+    Reading multiline yaml strings (with the `|` indicator) results in newlines added when dumping the YAML.
+    This function helps to preserve the original multiline formatting.
+    """
+    if '\n' in data:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+
+yaml.add_representer(str, str_presenter)
+
+
 @click.command()
 @click.option('--latest', is_flag=True, default=False, help='If enabled, sets the version of the spec to latest.')
 def update_aws_spec(latest: bool) -> None:
