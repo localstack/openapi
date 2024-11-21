@@ -8,7 +8,7 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 3.8.1
+  version: 4.0.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
@@ -31,10 +31,17 @@ components:
       required: true
       schema:
         type: string
-    SesMessageId:
-      description: ID of the message (`id` field of SES message)
+    SesIdFilter:
+      description: Filter for the `id` field in SES message
       in: query
       name: id
+      required: false
+      schema:
+        type: string
+    SesEmailFilter:
+      description: Filter for the `source` field in SES message
+      in: query
+      name: email
       required: false
       schema:
         type: string
@@ -213,6 +220,68 @@ components:
               version:
                 type: integer
                 description: Version number.
+        remote_url:
+          type: string
+      required:
+      - remote_url
+    NetworkEffectsConfig:
+      type: object
+      description: Configuration for network effects.
+      additionalProperties: false
+      required:
+      - latency
+      properties:
+        latency:
+          type: integer
+          description: Network latency in milliseconds. By default, 0 is used.
+          minimum: 0
+    PodRemote:
+      type: object
+      description: Details of a pod remote
+      properties:
+        name:
+          type: string
+          description: Name of the remote.
+        protocols:
+          type: array
+          items:
+            type: string
+          description: Supported protocols of the remote.
+        token:
+          type: object
+          description: The token for this remote.
+        url:
+          type: string
+          description: URL of the remote server.
+      example:
+        name: example_remote
+        protocols:
+        - http
+        - https
+        url: https://example.com
+    IamConfig:
+      type: object
+      description: IAM Config
+      properties:
+        state:
+          type: string
+          description: Engine state
+          enum:
+          - DISABLED
+          - ENGINE_ONLY
+          - SOFT_MODE
+          - ENFORCED
+          example: ENFORCED
+        config_enforce_iam:
+          type: boolean
+          description: Whether the ENFORCE_IAM flag was set on startup of LocalStack.
+          readOnly: true
+          example: true
+        config_iam_soft_mode:
+          type: boolean
+          description: Supported protocols of the remote.
+          readOnly: true
+          example: false
     InitScripts:
       additionalProperties: false
       properties:
@@ -278,6 +347,26 @@ components:
       - completed
       - scripts
       type: object
+    SESDestination:
+      type: object
+      description: Possible destination of a SES message
+      properties:
+        ToAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+        CcAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+        BccAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+      additionalProperties: false
     SesSentEmail:
       additionalProperties: false
       properties:
@@ -293,7 +382,7 @@ components:
           - text_part
           type: object
         Destination:
-          type: string
+          $ref: '#/components/schemas/SESDestination'
         Id:
           type: string
         RawData:
@@ -314,13 +403,7 @@ components:
       - Id
       - Region
       - Timestamp
-      - Destination
-      - RawData
       - Source
-      - Subject
-      - Template
-      - TemplateData
-      - Body
       type: object
     SessionInfo:
       additionalProperties: false
@@ -365,6 +448,159 @@ components:
       - error
       - subscription_arn
       type: object
+    SNSPlatformEndpointMessage:
+      type: object
+      description: Message sent to a platform endpoint via SNS
+      additionalProperties: false
+      properties:
+        TargetArn:
+          type: string
+        TopicArn:
+          type: string
+        Message:
+          type: string
+        MessageAttributes:
+          type: object
+        MessageStructure:
+          type: string
+        Subject:
+          type:
+          - string
+          - 'null'
+        MessageId:
+          type: string
+    SNSMessage:
+      type: object
+      description: Message sent via SNS
+      properties:
+        PhoneNumber:
+          type: string
+        TopicArn:
+          type:
+          - string
+          - 'null'
+        SubscriptionArn:
+          type:
+          - string
+          - 'null'
+        MessageId:
+          type: string
+        Message:
+          type: string
+        MessageAttributes:
+          type: object
+        MessageStructure:
+          type:
+          - string
+          - 'null'
+        Subject:
+          type:
+          - string
+          - 'null'
+    SNSPlatformEndpointMessages:
+      type: object
+      description: |
+        Messages sent to the platform endpoint retrieved via the retrospective endpoint.
+        The endpoint ARN is the key with a list of messages as value.
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/SNSPlatformEndpointMessage'
+    SMSMessages:
+      type: object
+      description: |
+        SMS messages retrieved via the retrospective endpoint.
+        The phone number is the key with a list of messages as value.
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/SNSMessage'
+    SNSPlatformEndpointResponse:
+      type: object
+      additionalProperties: false
+      description: Response payload for the /_aws/sns/platform-endpoint-messages endpoint
+      properties:
+        region:
+          type: string
+          description: The AWS region, e.g., us-east-1
+        platform_endpoint_messages:
+          $ref: '#/components/schemas/SNSPlatformEndpointMessages'
+      required:
+      - region
+      - platform_endpoint_messages
+    SNSSMSMessagesResponse:
+      type: object
+      additionalProperties: false
+      description: Response payload for the /_aws/sns/sms-messages endpoint
+      properties:
+        region:
+          type: string
+          description: The AWS region, e.g., us-east-1
+        sms_messages:
+          $ref: '#/components/schemas/SMSMessages'
+      required:
+      - region
+      - sms_messages
+    ReceiveMessageRequest:
+      type: object
+      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
+      required:
+      - QueueUrl
+      properties:
+        QueueUrl:
+          type: string
+          format: uri
+        AttributeNames:
+          type: array
+          items:
+            type: string
+        MessageSystemAttributeNames:
+          type: array
+          items:
+            type: string
+        MessageAttributeNames:
+          type: array
+          items:
+            type: string
+        MaxNumberOfMessages:
+          type: integer
+        VisibilityTimeout:
+          type: integer
+        WaitTimeSeconds:
+          type: integer
+        ReceiveRequestAttemptId:
+          type: string
+    ReceiveMessageResult:
+      type: object
+      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
+      properties:
+        Messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+    Message:
+      type: object
+      properties:
+        MessageId:
+          type:
+          - string
+          - 'null'
+        ReceiptHandle:
+          type:
+          - string
+          - 'null'
+        MD5OfBody:
+          type:
+          - string
+          - 'null'
+        Body:
+          type:
+          - string
+          - 'null'
+        Attributes:
+          type: object
+        MessageAttributes:
+          type: object
     CloudWatchMetrics:
       additionalProperties: false
       properties:
@@ -534,17 +770,142 @@ paths:
       tags:
       - pro
       - aws
+  /_aws/iam/config:
+    get:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      responses:
+        200:
+          description: Successful retrieval of configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IamConfig'
+    post:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IamConfig'
+      responses:
+        200:
+          description: Successful setting of the new configuration.
+        400:
+          description: Bad request.
   /_aws/iot/LocalStackIoTRootCA.pem:
     get:
       description: Retrieve certificate for LocalStack IoT root certificate authority
       tags:
       - pro
       - aws
-  /localstack/chaos/effects:
+  /_aws/pinpoint/{application_id}/{reference_id}:
+    get:
+      description: Retrieve Pinpoint OTP code
+      tags:
+      - pro
+      - aws
+      parameters:
+      - name: application_id
+        in: path
+        required: true
+        description: Pinpoint application ID
+        schema:
+          type: string
+      - name: reference_id
+        in: path
+        required: true
+        description: Reference ID that was used in SentOTPMessage
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OTP message details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - AllowedAttempts
+                - CodeLength
+                - DestinationIdentity
+                - ReferenceId
+                - OriginationIdentity
+                - ValidityPeriod
+                - Attempts
+                - ApplicationId
+                - CreatedTimestamp
+                - Code
+                properties:
+                  AllowedAttempts:
+                    type: integer
+                    maximum: 5
+                    description: Maximum number of allowed attempts for OTP validation.
+                  BrandName:
+                    type: string
+                    description: Name of the brand that is associated with the OTP
+                      code.
+                  CodeLength:
+                    type: integer
+                    minimum: 5
+                    maximum: 8
+                    description: Number of digits in the OTP code that was sent.
+                  DestinationIdentity:
+                    type: string
+                    description: Phone number that the OTP code was sent to.
+                  EntityId:
+                    type: string
+                    description: ID registered with the regulatory agency (India only).
+                  Language:
+                    type: string
+                    description: Language used when sending the message.
+                  OriginationIdentity:
+                    type: string
+                    description: Identity (e.g. short code) that is used to send the
+                      OTP code.
+                  ReferenceId:
+                    type: string
+                    minLength: 1
+                    maxLength: 48
+                    description: Unique reference ID that was used in the SendOTPMessage
+                      request.
+                  TemplateId:
+                    type: string
+                    description: ID that is registered with the regulatory agency
+                      (India only).
+                  ValidityPeriod:
+                    type: integer
+                    maximum: 60
+                    description: Time in minutes the OTP code is valid for.
+                  Attempts:
+                    type: string
+                    minimum: 0
+                    description: OTP validation attempts made so far.
+                  ApplicationId:
+                    type: string
+                    description: Identifier of the Pinpoint Application.
+                  CreatedTimestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the SendOTPMessage request.
+                  Code:
+                    type: string
+                    minLength: 5
+                    maxLength: 8
+                    description: One-time password.
+  /_localstack/chaos/effects:
     post:
       summary: Configure network effects
       description: Network effects include things like latency, jitter, bandwidth
         throttling etc. which do not lead to an application-level fault/exception.
+      operationId: set_network_effects
       tags:
       - pro
       - chaos
@@ -553,24 +914,20 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: Configuration for network effects.
-              additionalProperties: false
-              required:
-              - latency
-              properties:
-                latency:
-                  type: integer
-                  description: Network latency in milliseconds. By default, 0 is used.
-                  minimum: 0
+              $ref: '#/components/schemas/NetworkEffectsConfig'
       responses:
         200:
           description: Successfully configured network effects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkEffectsConfig'
     get:
       summary: Get current network effects configuration
       tags:
       - pro
       - chaos
+      operationId: get_network_effects
       description: Retrieve the current configuration for network latency effects
         in Localstack Chaos.
       responses:
@@ -579,21 +936,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                description: Configuration for network effects.
-                additionalProperties: false
-                required:
-                - latency
-                properties:
-                  latency:
-                    type: integer
-                    description: Network latency in milliseconds. By default, 0 is
-                      used.
-                    minimum: 0
-  /localstack/chaos/faults:
+                $ref: '#/components/schemas/NetworkEffectsConfig'
+  /_localstack/chaos/faults:
     get:
       summary: Get the current fault configuration
       description: Retrieve the list of currently configured fault rules.
+      operationId: get_fault_rules
       tags:
       - pro
       - chaos
@@ -609,8 +957,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/FaultRule'
     post:
-      summary: Add a new fault configuration
-      description: Add a new set of fault rules.
+      summary: Set a new fault configuration
+      description: Set a new set of fault rules. Overwrite the previous ones.
+      operationId: set_fault_rules
       tags:
       - pro
       - chaos
@@ -636,8 +985,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/FaultRule'
     patch:
-      summary: Add a rule to the current configuration
-      description: Add a new rule to the existing fault configuration.
+      summary: Add a new set of rules to the current configuration
+      description: Add new rules to the existing fault configuration.
+      operationId: add_fault_rules
       tags:
       - pro
       - chaos
@@ -663,8 +1013,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/FaultRule'
     delete:
-      summary: Delete a rule from the configuration
-      description: Remove a rule from the fault configuration.
+      summary: Delete a set of rules from the configuration
+      description: Remove rules from the fault configuration.
+      operationId: delete_fault_rules
       tags:
       - pro
       - chaos
@@ -673,7 +1024,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FaultRule'
+              type: array
+              description: List of configured rules for faults.
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/FaultRule'
       responses:
         200:
           description: Successful retrieval of current configuration.
@@ -732,10 +1087,8 @@ paths:
           description: The list of Cloud Pods associated with a given identity
   /_localstack/pods/environment:
     get:
-      description: 'Retrieves some information about the current environment, like
-        LocalStack and Moto versions.
-
-        '
+      description: |
+        Retrieves some information about the current environment, like LocalStack and Moto versions.
       tags:
       - pro
       - pods
@@ -777,22 +1130,7 @@ paths:
                   remotes:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: Name of the remote.
-                        protocols:
-                          type: array
-                          items:
-                            type: string
-                          description: Supported protocols of the remote.
-                        token:
-                          type: object
-                          description: The token for this remote.
-                        url:
-                          type: string
-                          description: URL of the remote server.
+                      $ref: '#/components/schemas/PodRemote'
   /_localstack/pods/remotes/{name}:
     get:
       summary: Get a specific remote
@@ -814,25 +1152,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    description: Name of the remote.
-                  protocols:
-                    type: array
-                    items:
-                      type: string
-                    description: Supported protocols of the remote.
-                  remote:
-                    type: string
-                    description: URL of the remote server.
-              example:
-                name: example_remote
-                protocols:
-                - http
-                - https
-                remote_url: https://example.com
+                $ref: '#/components/schemas/PodRemote'
     post:
       summary: Create a new remote
       description: Creates a new remote with the specified name and configuration.
@@ -1361,7 +1681,7 @@ paths:
       tags:
       - aws
       parameters:
-      - $ref: '#/components/parameters/SesMessageId'
+      - $ref: '#/components/parameters/SesIdFilter'
       responses:
         '204':
           description: Message was successfully discarded
@@ -1371,13 +1691,8 @@ paths:
       tags:
       - aws
       parameters:
-      - $ref: '#/components/parameters/SesMessageId'
-      - description: Source of the message (`source` field of SES message)
-        in: query
-        name: email
-        required: false
-        schema:
-          type: string
+      - $ref: '#/components/parameters/SesIdFilter'
+      - $ref: '#/components/parameters/SesEmailFilter'
       responses:
         '200':
           content:
@@ -1395,8 +1710,8 @@ paths:
           description: List of sent messages
   /_aws/sns/platform-endpoint-messages:
     delete:
-      description: Discard SNS platform endpoint messages
-      operationId: discard_sns_messages
+      description: Discard the messages published to a platform endpoint via SNS
+      operationId: discard_sns_endpoint_messages
       tags:
       - aws
       parameters:
@@ -1407,8 +1722,8 @@ paths:
         '204':
           description: Platform endpoint message was discarded
     get:
-      description: Retrieve SNS platform endpoint messages
-      operationId: get_sns_messages
+      description: Retrieve the messages sent to a platform endpoint via SNS
+      operationId: get_sns_endpoint_messages
       tags:
       - aws
       parameters:
@@ -1420,17 +1735,8 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties: false
-                properties:
-                  platform_endpoint_messages:
-                    type: object
-                  region:
-                    type: string
-                required:
-                - platform_endpoint_messages
-                - region
-                type: object
-          description: Platform endpoint messages
+                $ref: '#/components/schemas/SNSPlatformEndpointResponse'
+          description: SNS messages via retrospective access
   /_aws/sns/sms-messages:
     delete:
       description: Discard SNS SMS messages
@@ -1443,8 +1749,6 @@ paths:
       - $ref: '#/components/parameters/SnsPhoneNumber'
       responses:
         '204':
-          content:
-            text/plain: {}
           description: SMS message was discarded
     get:
       description: Retrieve SNS SMS messages
@@ -1460,17 +1764,8 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties: false
-                properties:
-                  region:
-                    type: string
-                  sms_messages:
-                    type: object
-                required:
-                - sms_messages
-                - region
-                type: object
-          description: SNS SMS messages
+                $ref: '#/components/schemas/SNSSMSMessagesResponse'
+          description: SNS messages via retrospective access
   /_aws/sns/subscription-tokens/{subscription_arn}:
     get:
       description: Retrieve SNS subscription token for confirmation
@@ -1528,15 +1823,55 @@ paths:
       responses:
         '200':
           content:
-            text/xml: {}
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/ReceiveMessageResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiveMessageResult'
           description: SQS queue messages
         '400':
           content:
             text/xml: {}
+            application/json: {}
           description: Bad request
         '404':
           content:
             text/xml: {}
+            application/json: {}
+          description: Not found
+    post:
+      summary: Retrieves one or more messages from the specified queue.
+      description: |
+        This API receives messages from an SQS queue.
+        https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html#API_ReceiveMessage_ResponseSyntax
+      operationId: receive_message
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReceiveMessageRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiveMessageRequest'
+      responses:
+        '200':
+          content:
+            text/xml: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiveMessageResult'
+          description: SQS queue messages
+        '400':
+          content:
+            text/xml: {}
+            application/json: {}
+          description: Bad request
+        '404':
+          content:
+            text/xml: {}
+            application/json: {}
           description: Not found
   /_aws/sqs/messages/{region}/{account_id}/{queue_name}:
     get:
@@ -1567,14 +1902,19 @@ paths:
         '200':
           content:
             text/xml: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiveMessageResult'
           description: SQS queue messages
         '400':
           content:
             text/xml: {}
+            application/json: {}
           description: Bad request
         '404':
           content:
             text/xml: {}
+            application/json: {}
           description: Not found
   /_localstack/config:
     get:
