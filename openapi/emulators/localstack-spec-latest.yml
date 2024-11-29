@@ -165,7 +165,9 @@ components:
           additionalProperties: false
           properties:
             html_part:
-              type: string
+              type:
+              - string
+              - 'null'
             text_part:
               type: string
           required:
@@ -290,23 +292,18 @@ components:
           - 'null'
     SNSPlatformEndpointMessages:
       type: object
-      description: 'Messages sent to the platform endpoint retrieved via the retrospective
-        endpoint.
-
+      description: |
+        Messages sent to the platform endpoint retrieved via the retrospective endpoint.
         The endpoint ARN is the key with a list of messages as value.
-
-        '
       additionalProperties:
         type: array
         items:
           $ref: '#/components/schemas/SNSPlatformEndpointMessage'
     SMSMessages:
       type: object
-      description: 'SMS messages retrieved via the retrospective endpoint.
-
+      description: |
+        SMS messages retrieved via the retrospective endpoint.
         The phone number is the key with a list of messages as value.
-
-        '
       additionalProperties:
         type: array
         items:
@@ -927,11 +924,9 @@ paths:
           description: Not found
     post:
       summary: Retrieves one or more messages from the specified queue.
-      description: 'This API receives messages from an SQS queue.
-
+      description: |
+        This API receives messages from an SQS queue.
         https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html#API_ReceiveMessage_ResponseSyntax
-
-        '
       operationId: receive_message
       requestBody:
         required: true
@@ -1757,10 +1752,8 @@ paths:
           description: The list of Cloud Pods associated with a given identity
   /_localstack/pods/environment:
     get:
-      description: 'Retrieves some information about the current environment, like
-        LocalStack and Moto versions.
-
-        '
+      description: |
+        Retrieves some information about the current environment, like LocalStack and Moto versions.
       tags:
       - pro
       - pods
