@@ -7,7 +7,7 @@ on:
 jobs:
   update-to-latest:
     name: "Update specs to latest"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout OpenAPI
         uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
       - name: Install OS packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libsnappy-dev jq postgresql-14=14.13-0ubuntu0* postgresql-client postgresql-plpython3 libvirt-dev
+          sudo apt-get install -y --allow-downgrades libsnappy-dev jq libvirt-dev
 
       - name: Checkout Community
         uses: actions/checkout@v4
