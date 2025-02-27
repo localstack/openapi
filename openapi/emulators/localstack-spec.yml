@@ -8,7 +8,7 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 4.1.1
+  version: 4.2.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
@@ -658,6 +658,105 @@ components:
           description: Supported protocols of the remote.
           readOnly: true
           example: false
+    ActionAndResource:
+      type: object
+      description: Action and resource access evaluation
+      required:
+      - action
+      - resource
+      - account
+      properties:
+        action:
+          type: string
+          description: iam action
+        resource:
+          type: string
+          description: resource arn
+        account:
+          type: string
+          description: account where the resource is deployed
+        condition_keys:
+          type: array
+          items:
+            type: string
+          description: permission test evaluation
+        description:
+          type: string
+          description: permission test evaluation
+        access_level:
+          type: string
+          description: permission test evaluation
+    CheckActionsRequest:
+      type: object
+      description: check actions request
+      required:
+      - access_key_id
+      - region_name
+      - required_permission
+      properties:
+        access_key_id:
+          type: string
+          description: Access key id of the user/assumed role
+        region_name:
+          type: string
+          description: region name for the current authenticated session
+        required_permission:
+          type: list
+          description: list of resources and actions to verify user access
+          items:
+            type: object
+            required:
+            - action
+            - resource
+            properties:
+              resource:
+                type: string
+                description: Arn of the resource to test against
+              action:
+                type: string
+                description: action to test permission for
+    CheckActionsResponse:
+      type: object
+      description: actions check response
+      properties:
+        allowed:
+          type: boolean
+          description: All of the actions in the request are allowed to be performed
+            on the given resource
+        implicit_deny:
+          type: list
+          items:
+            $ref: '#/components/schemas/ActionAndResource'
+          description: all actions from the request that resulted in an implicit deny
+        explicit_deny:
+          type: list
+          items:
+            $ref: '#/components/schemas/ActionAndResource'
+          description: all actions from the request that resulted in an explicit deny
+        explicit_allow:
+          type: list
+          items:
+            $ref: '#/components/schemas/ActionAndResource'
+          description: all actions from the request that explicitly allowed
+        source_principal:
+          type: object
+          description: information about the source principal evaluated from the access
+            key id
+          properties:
+            arn:
+              type: string
+              description: arn of the user or assumed role
+            account:
+              type: string
+              description: account where the user permission were evaluated
+        status_code:
+          type: integer
+          description: currently default values do not use for determining success
+            or failures
+        status_reason:
+          type: string
+          description: currently default values do not use for determining success
+            or failures
 paths:
   /_aws/cloudwatch/metrics/raw:
     get:
@@ -1461,6 +1560,26 @@ paths:
           description: Successful setting of the new configuration.
         400:
           description: Bad request.
+  /_aws/iam/check-actions-allowed:
+    post:
+      description: Test if the given actions are allowed on the specific resource
+      tags:
+      - pro
+      - aws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckActionsRequest'
+      responses:
+        200:
+          description: Successful test. It is still required to inspect the response
+            as it can be denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckActionsResponse'
   /_aws/iot/LocalStackIoTRootCA.pem:
     get:
       description: Retrieve certificate for LocalStack IoT root certificate authority
