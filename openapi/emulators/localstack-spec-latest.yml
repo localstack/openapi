@@ -825,7 +825,7 @@ components:
           type: string
           description: region name for the current authenticated session
         required_permission:
-          type: list
+          type: array
           description: list of resources and actions to verify user access
           items:
             type: object
@@ -848,17 +848,17 @@ components:
           description: All of the actions in the request are allowed to be performed
             on the given resource
         implicit_deny:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that resulted in an implicit deny
         explicit_deny:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that resulted in an explicit deny
         explicit_allow:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that explicitly allowed
