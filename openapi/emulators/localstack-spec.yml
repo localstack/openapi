@@ -8,7 +8,7 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 4.2.0
+  version: 4.3.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
@@ -465,6 +465,14 @@ components:
         message:
           type: string
           description: An error message.
+    LoadService:
+      type: object
+      description: Configuration for the service load operation
+      properties:
+        start:
+          type: boolean
+          description: Start the service after loading the state
+          default: true
     FaultRule:
       type: object
       description: Each rule represents the conditions for a fault and its detrimental
@@ -600,6 +608,122 @@ components:
           type: string
       required:
       - remote_url
+    ReplicationJob:
+      additionalProperties: false
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: The Id of the ReplicationJob.
+        state:
+          type: string
+          description: State of the ReplicationJob.
+        error_message:
+          type: string
+          description: Description of failure in case of failed replication.
+        type:
+          type: string
+          description: Type of replication Job.
+        replication_config:
+          type: object
+          description: configuration object for custom replication
+    ReplicationSupportedResource:
+      additionalProperties: false
+      type: object
+      properties:
+        resource_type:
+          type: string
+          description: Type of resource
+        policy_statements:
+          type: array
+          description: Required IAM permissions to replicate resource.
+        service:
+          type: string
+          description: AWS service.
+        identifier:
+          type: string
+          description: Resource property or properties used as identifier. In case
+            there are multiple properties, join them with ':'. ie. `RepositoryName:<ImageTag[Optional]>`
+            for ecr repository can be used as `my-repo` or `my-repo:latest`
+    ReplicationConfigMock:
+      type: object
+      description: Mostly use for testing.
+      properties:
+        delay:
+          type: number
+          description: Number of seconds for mock replication job to take.
+    ReplicationConfigSingle:
+      type: object
+      description: 'Specify the AWS resource to replicate by providing either: (1)
+        the complete `resource_arn`; OR (2) both `resource_type` and `resource_identifier`
+        together. Do not specify both options simultaneously.'
+      properties:
+        resource_arn:
+          type: string
+          description: 'AWS ARN (Amazon Resource Name) of the resource to replicate.
+            Example: arn:aws:iam::123456789012:role/MyRole'
+        resource_type:
+          type: string
+          description: 'Resource type in AWS CloudControl format. Example: AWS::IAM::Role'
+        resource_identifier:
+          type: string
+          description: CloudControl identifier for resource.
+    ReplicationRequest:
+      additionalProperties: false
+      type: object
+      required:
+      - replication_type
+      - source_aws_config
+      properties:
+        replication_type:
+          type: string
+          description: The type of replication job
+          enum:
+          - MOCK
+          - SINGLE_RESOURCE
+        source_aws_config:
+          type: object
+          description: Access credentials of source AWS account to describe the resource
+            to replicate.
+          required:
+          - aws_access_key_id
+          - aws_secret_access_key
+          - region_name
+          properties:
+            aws_access_key_id:
+              type: string
+            aws_secret_access_key:
+              type: string
+            aws_session_token:
+              type: string
+            region_name:
+              type: string
+            endpoint_url:
+              type: string
+        target_aws_config:
+          type: object
+          description: Access credentials of target LocalStack instance to replicate
+            the resource into.
+          required:
+          - aws_access_key_id
+          - aws_secret_access_key
+          - region_name
+          properties:
+            aws_access_key_id:
+              type: string
+            aws_secret_access_key:
+              type: string
+            aws_session_token:
+              type: string
+            region_name:
+              type: string
+            endpoint_url:
+              type: string
+          replication_job_config:
+            description: Parameters for replication
+            oneOf:
+            - $ref: '#/components/schemas/ReplicationConfigMock'
+            - $ref: '#/components/schemas/ReplicationConfigSingle'
     NetworkEffectsConfig:
       type: object
       description: Configuration for network effects.
@@ -701,7 +825,7 @@ components:
           type: string
           description: region name for the current authenticated session
         required_permission:
-          type: list
+          type: array
           description: list of resources and actions to verify user access
           items:
             type: object
@@ -724,17 +848,17 @@ components:
           description: All of the actions in the request are allowed to be performed
             on the given resource
         implicit_deny:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that resulted in an implicit deny
         explicit_deny:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that resulted in an explicit deny
         explicit_allow:
-          type: list
+          type: array
           items:
             $ref: '#/components/schemas/ActionAndResource'
           description: all actions from the request that explicitly allowed
@@ -2230,6 +2354,88 @@ paths:
       tags:
       - pro
       - pods
+  /_localstack/replicator/jobs:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: List of replication jobs
+      operationId: listReplicationJobs
+      responses:
+        '200':
+          description: List of replication jobs
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationJob'
+    post:
+      tags:
+      - pro
+      - replicator
+      description: Submits a replication job
+      operationId: createReplicationJob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplicationRequest'
+      responses:
+        '200':
+          description: Replication Job submitted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationJob'
+  /_localstack/replicator/jobs/{job_id}:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: Get replication job
+      operationId: GetReplicationJob
+      parameters:
+      - description: Id of replication job
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Replication Job found
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/ReplicationJob'
+        '404':
+          description: Replication job not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /_localstack/replicator/resources:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: List supported resources for replication
+      operationId: listSupportedResources
+      responses:
+        '200':
+          description: List of resources available for replication
+          content:
+            aplication/json:
+              schema:
+                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationSupportedResource'
   /_localstack/stackinfo:
     get:
       description: Collect information used to populate the dashboard info.
@@ -2283,7 +2489,14 @@ paths:
       - pro
   /_localstack/state/load:
     post:
-      description: Load all service states
+      description: Load all service states. By default, it starts the services when
+        loading their states.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadService'
       responses:
         '200':
           content:
@@ -2318,9 +2531,16 @@ paths:
       - state
   /_localstack/state/{service}/load:
     post:
-      description: Load a service state
+      description: Load a service state. By default, it starts the service, if the
+        service hasn't started yet.
       parameters:
       - $ref: '#/components/parameters/ServiceName'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadService'
       responses:
         '200':
           description: Successful
