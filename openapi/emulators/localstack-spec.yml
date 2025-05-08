@@ -8,7 +8,7 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 4.3.0
+  version: 4.4.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
