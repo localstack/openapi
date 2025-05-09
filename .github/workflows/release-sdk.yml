@@ -1,0 +1,23 @@
+name: Release SDKs
+
+on:
+  release:
+    # Start the release of the SDKs when a new GitHub release of the OpenAPI spec is _published_
+    types: [published]
+
+jobs:
+  release-python-sdk:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: "Compute version"
+        run: |
+            TAG=${{ github.event.release.tag_name }}
+            echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+      - name: "Release Python SDK"
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          repository: localstack/localstack-sdk-python
+          event-type: release-sdk
+          client-payload: '{"version": "${{ env.VERSION }}"}'
