@@ -44,25 +44,25 @@ jobs:
         id: pro-checkout
         continue-on-error: true
         with:
-          repository: localstack/localstack-ext
-          path: localstack-ext
+          repository: localstack/localstack-pro
+          path: localstack-pro
           token: ${{ secrets.PRO_GITHUB_TOKEN }}
           ref: ${{ github.event.client_payload.ref }}
           
-      - name: Pro - fallback to master branch
+      - name: Pro - fallback to main branch
         if: steps.pro-checkout.outcome == 'failure'
         uses: actions/checkout@v4
         with:
-          repository: localstack/localstack-ext
-          path: localstack-ext
+          repository: localstack/localstack-pro
+          path: localstack-pro
           token: ${{ secrets.PRO_GITHUB_TOKEN }}
 
       - name: Install Python Dependencies for Pro
-        working-directory: localstack-ext
+        working-directory: localstack-pro
         run: make install
  
       - name: Link Community into Pro venv
-        working-directory: localstack-ext
+        working-directory: localstack-pro
         run: |
           source .venv/bin/activate
           pip install -e ../localstack[runtime,test]
@@ -71,16 +71,16 @@ jobs:
         working-directory: localstack
         # Entrypoints need to be generated _after_ the community edition has been linked into the venv
         run: |
-          VENV_DIR="../localstack-ext/.venv" make entrypoints
+          VENV_DIR="../localstack-pro/.venv" make entrypoints
 
       - name: Create Pro Entrypoints
-        working-directory: localstack-ext
+        working-directory: localstack-pro
         run: |
           make entrypoints
 
       - name: Generate the latest spec
         run: |
-          source localstack-ext/.venv/bin/activate
+          source localstack-pro/.venv/bin/activate
           python bin/update-aws-spec.py --latest
       
       - name: Create PR
