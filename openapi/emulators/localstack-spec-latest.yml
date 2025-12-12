@@ -1990,6 +1990,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/PodList'
           description: The list of Cloud Pods associated with a given identity
+    post:
+      description: Loads a pod state from a zip file and restores its services.
+      tags:
+      - pro
+      - pods
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pod:
+                  type: string
+                  format: binary
+              required:
+              - pod
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Pod state loaded successfully.
+          headers:
+            Content-Length:
+              description: Length of the pod in bytes.
+              schema:
+                type: integer
+        '400':
+          description: Bad request.
   /_localstack/pods/environment:
     get:
       description: |
@@ -2154,37 +2185,6 @@ paths:
               description: The size of the pod file in bytes.
               schema:
                 type: integer
-    post:
-      description: Loads a pod state from a zip file and restores its services.
-      tags:
-      - pro
-      - pods
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                pod:
-                  type: string
-                  format: binary
-              required:
-              - pod
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '201':
-          description: Pod state loaded successfully.
-          headers:
-            Content-Length:
-              description: Length of the pod in bytes.
-              schema:
-                type: integer
-        '400':
-          description: Bad request.
   /_localstack/pods/state/metamodel:
     get:
       description: Extract a metamodel representing the state of the current LocalStack
