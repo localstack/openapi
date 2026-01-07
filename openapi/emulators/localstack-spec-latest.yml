@@ -1827,6 +1827,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NetworkEffectsConfig'
+        400:
+          description: Invalid request
     get:
       summary: Get current network effects configuration
       tags:
@@ -1889,6 +1891,8 @@ paths:
                 uniqueItems: true
                 items:
                   $ref: '#/components/schemas/FaultRule'
+        400:
+          description: Invalid request
     patch:
       summary: Add a new set of rules to the current configuration
       description: Add new rules to the existing fault configuration.
@@ -1945,6 +1949,8 @@ paths:
                 uniqueItems: true
                 items:
                   $ref: '#/components/schemas/FaultRule'
+        400:
+          description: Invalid request
   /_localstack/cloudformation/deploy:
     get:
       description: UI to deploy and manage your CloudFormation stacks using public
@@ -1958,6 +1964,8 @@ paths:
           type: string
           format: uri
       responses:
+        '404':
+          description: Template not found.
         '200':
           description: HTML page for CloudFormation deployment.
           content:
@@ -2089,6 +2097,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PodRemote'
+        '404':
+          description: Remote not found
     post:
       summary: Create a new remote
       description: Creates a new remote with the specified name and configuration.
@@ -2227,6 +2237,8 @@ paths:
       responses:
         '200':
           description: OK
+        '400':
+          description: Invalid request
         '500':
           description: Deletion failed
       tags:
@@ -2270,6 +2282,8 @@ paths:
             application/x-ndjson: {}
           description: The response is a sequence of JSON events, according to the
             schema, separated by a newline
+        '400':
+          description: Invalid request
       tags:
       - pro
       - pods
@@ -2391,6 +2405,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReplicationJob'
+        '400':
+          description: Invalid request
+        '415':
+          description: Content-Type was not 'application/json'
   /_localstack/replicator/jobs/{job_id}:
     get:
       tags:
@@ -2430,7 +2448,7 @@ paths:
         '200':
           description: List of resources available for replication
           content:
-            aplication/json:
+            application/json:
               schema:
                 additionalProperties: false
                 type: array
@@ -2550,6 +2568,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StateResult'
+        404:
+          description: Service not found
       tags:
       - pro
       - state
@@ -2561,6 +2581,8 @@ paths:
       responses:
         '200':
           description: Successful
+        404:
+          description: Service not found
       tags:
       - pro
       - state
@@ -2578,6 +2600,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StateResult'
+        404:
+          description: Service not found
       tags:
       - pro
       - state
