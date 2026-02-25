@@ -1231,6 +1231,8 @@ paths:
               schema:
                 type: object
           description: Current LocalStack configuration
+        '404':
+          description: Not found
     post:
       description: Configuration option to update with new value
       operationId: update_config_option
@@ -1276,6 +1278,8 @@ paths:
           content:
             application/json: {}
           description: Bad request
+        '404':
+          description: Not found
   /_localstack/diagnose:
     get:
       description: Get diagnostics report
@@ -1290,6 +1294,8 @@ paths:
                 additionalProperties: false
                 properties:
                   config:
+                    type: object
+                  docker-dependent-image-hashes:
                     type: object
                   docker-dependent-image-hosts:
                     type: object
@@ -1526,6 +1532,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/InitScriptsStage'
           description: Information about init scripts in a specific stage
+        '404':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Stage not found
   /_localstack/plugins:
     get:
       description: ''
@@ -2333,6 +2345,12 @@ paths:
             application/x-ndjson: {}
           description: The response is a sequence of JSON events, according to the
             schema, separated by a newline
+        '422':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The pod state is incompatible with the current LocalStack version
       tags:
       - pro
       - pods
