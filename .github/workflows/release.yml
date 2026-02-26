@@ -51,7 +51,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install localstack==${{ env.release }}
+          pip install localstack-ext==${{ env.release }}
 
       - name: "Create tagged LocalStack OpenAPI spec"
         run: |
