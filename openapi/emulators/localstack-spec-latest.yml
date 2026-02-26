@@ -12,6 +12,9 @@ info:
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
+tags:
+- description: Available in LocalStack Pro
+  name: pro
 servers:
 - url: http://{host}:{port}
   variables:
@@ -21,6 +24,13 @@ servers:
       default: localhost.localstack.cloud
 components:
   parameters:
+    ServiceName:
+      description: Service name
+      in: path
+      name: service
+      required: true
+      schema:
+        type: string
     SesIdFilter:
       description: Filter for the `id` field in SES message
       in: query
@@ -65,393 +75,7 @@ components:
       schema:
         default: us-east-1
         type: string
-    ServiceName:
-      description: Service name
-      in: path
-      name: service
-      required: true
-      schema:
-        type: string
   schemas:
-    InitScripts:
-      additionalProperties: false
-      properties:
-        completed:
-          additionalProperties: false
-          properties:
-            BOOT:
-              type: boolean
-            READY:
-              type: boolean
-            SHUTDOWN:
-              type: boolean
-            START:
-              type: boolean
-          required:
-          - BOOT
-          - START
-          - READY
-          - SHUTDOWN
-          type: object
-        scripts:
-          items:
-            additionalProperties: false
-            properties:
-              name:
-                type: string
-              stage:
-                type: string
-              state:
-                type: string
-            required:
-            - stage
-            - name
-            - state
-            type: object
-          type: array
-      required:
-      - completed
-      - scripts
-      type: object
-    InitScriptsStage:
-      additionalProperties: false
-      properties:
-        completed:
-          type: boolean
-        scripts:
-          items:
-            additionalProperties: false
-            properties:
-              name:
-                type: string
-              stage:
-                type: string
-              state:
-                type: string
-            required:
-            - stage
-            - name
-            - state
-            type: object
-          type: array
-      required:
-      - completed
-      - scripts
-      type: object
-    SESDestination:
-      type: object
-      description: Possible destination of a SES message
-      properties:
-        ToAddresses:
-          type: array
-          items:
-            type: string
-            format: email
-        CcAddresses:
-          type: array
-          items:
-            type: string
-            format: email
-        BccAddresses:
-          type: array
-          items:
-            type: string
-            format: email
-      additionalProperties: false
-    SesSentEmail:
-      additionalProperties: false
-      properties:
-        Body:
-          additionalProperties: false
-          properties:
-            html_part:
-              type: string
-            text_part:
-              type: string
-          required:
-          - text_part
-          type: object
-        Destination:
-          $ref: '#/components/schemas/SESDestination'
-        Id:
-          type: string
-        RawData:
-          type: string
-        Region:
-          type: string
-        Source:
-          type: string
-        Subject:
-          type: string
-        Template:
-          type: string
-        TemplateData:
-          type: string
-        Timestamp:
-          type: string
-      required:
-      - Id
-      - Region
-      - Timestamp
-      - Source
-      type: object
-    SessionInfo:
-      additionalProperties: false
-      properties:
-        edition:
-          type: string
-        is_docker:
-          type: boolean
-        is_license_activated:
-          type: boolean
-        machine_id:
-          type: string
-        server_time_utc:
-          type: string
-        session_id:
-          type: string
-        system:
-          type: string
-        uptime:
-          type: integer
-        version:
-          type: string
-      required:
-      - version
-      - edition
-      - is_license_activated
-      - session_id
-      - machine_id
-      - system
-      - is_docker
-      - server_time_utc
-      - uptime
-      type: object
-    SnsSubscriptionTokenError:
-      additionalProperties: false
-      properties:
-        error:
-          type: string
-        subscription_arn:
-          type: string
-      required:
-      - error
-      - subscription_arn
-      type: object
-    SNSPlatformEndpointMessage:
-      type: object
-      description: Message sent to a platform endpoint via SNS
-      additionalProperties: false
-      properties:
-        TargetArn:
-          type: string
-        TopicArn:
-          type: string
-        Message:
-          type: string
-        MessageAttributes:
-          type: object
-        MessageStructure:
-          type: string
-        Subject:
-          type:
-          - string
-          - 'null'
-        MessageId:
-          type: string
-    SNSMessage:
-      type: object
-      description: Message sent via SNS
-      properties:
-        PhoneNumber:
-          type: string
-        TopicArn:
-          type:
-          - string
-          - 'null'
-        SubscriptionArn:
-          type:
-          - string
-          - 'null'
-        MessageId:
-          type: string
-        Message:
-          type: string
-        MessageAttributes:
-          type: object
-        MessageStructure:
-          type:
-          - string
-          - 'null'
-        Subject:
-          type:
-          - string
-          - 'null'
-    SNSPlatformEndpointMessages:
-      type: object
-      description: |
-        Messages sent to the platform endpoint retrieved via the retrospective endpoint.
-        The endpoint ARN is the key with a list of messages as value.
-      additionalProperties:
-        type: array
-        items:
-          $ref: '#/components/schemas/SNSPlatformEndpointMessage'
-    SMSMessages:
-      type: object
-      description: |
-        SMS messages retrieved via the retrospective endpoint.
-        The phone number is the key with a list of messages as value.
-      additionalProperties:
-        type: array
-        items:
-          $ref: '#/components/schemas/SNSMessage'
-    SNSPlatformEndpointResponse:
-      type: object
-      additionalProperties: false
-      description: Response payload for the /_aws/sns/platform-endpoint-messages endpoint
-      properties:
-        region:
-          type: string
-          description: The AWS region, e.g., us-east-1
-        platform_endpoint_messages:
-          $ref: '#/components/schemas/SNSPlatformEndpointMessages'
-      required:
-      - region
-      - platform_endpoint_messages
-    SNSSMSMessagesResponse:
-      type: object
-      additionalProperties: false
-      description: Response payload for the /_aws/sns/sms-messages endpoint
-      properties:
-        region:
-          type: string
-          description: The AWS region, e.g., us-east-1
-        sms_messages:
-          $ref: '#/components/schemas/SMSMessages'
-      required:
-      - region
-      - sms_messages
-    ReceiveMessageRequest:
-      type: object
-      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
-      required:
-      - QueueUrl
-      properties:
-        QueueUrl:
-          type: string
-          format: uri
-        AttributeNames:
-          type: array
-          items:
-            type: string
-        MessageSystemAttributeNames:
-          type: array
-          items:
-            type: string
-        MessageAttributeNames:
-          type: array
-          items:
-            type: string
-        MaxNumberOfMessages:
-          type: integer
-        VisibilityTimeout:
-          type: integer
-        WaitTimeSeconds:
-          type: integer
-        ReceiveRequestAttemptId:
-          type: string
-    ReceiveMessageResult:
-      type: object
-      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
-      properties:
-        Messages:
-          type: array
-          items:
-            $ref: '#/components/schemas/Message'
-    Message:
-      type: object
-      properties:
-        MessageId:
-          type:
-          - string
-          - 'null'
-        ReceiptHandle:
-          type:
-          - string
-          - 'null'
-        MD5OfBody:
-          type:
-          - string
-          - 'null'
-        Body:
-          type:
-          - string
-          - 'null'
-        Attributes:
-          type: object
-        MessageAttributes:
-          type: object
-    CloudWatchMetrics:
-      additionalProperties: false
-      properties:
-        metrics:
-          items:
-            additionalProperties: false
-            properties:
-              account:
-                description: Account ID
-                type: string
-              d:
-                description: Dimensions
-                items:
-                  additionalProperties: false
-                  properties:
-                    n:
-                      description: Dimension name
-                      type: string
-                    v:
-                      description: Dimension value
-                      oneOf:
-                      - type: string
-                      - type: integer
-                  required:
-                  - n
-                  - v
-                  type: object
-                type: array
-              n:
-                description: Metric name
-                type: string
-              ns:
-                description: Namespace
-                type: string
-              region:
-                description: Region name
-                type: string
-              t:
-                description: Timestamp
-                oneOf:
-                - type: string
-                  format: date-time
-                - type: number
-              v:
-                description: Metric value
-                oneOf:
-                - type: string
-                - type: integer
-            required:
-            - ns
-            - n
-            - v
-            - t
-            - d
-            - account
-            - region
-            type: object
-          type: array
-      required:
-      - metrics
-      type: object
     StateResult:
       type: object
       description: The result of a state save operation.
@@ -881,7 +505,1455 @@ components:
           type: string
           description: currently default values do not use for determining success
             or failures
+    InitScripts:
+      additionalProperties: false
+      properties:
+        completed:
+          additionalProperties: false
+          properties:
+            BOOT:
+              type: boolean
+            READY:
+              type: boolean
+            SHUTDOWN:
+              type: boolean
+            START:
+              type: boolean
+          required:
+          - BOOT
+          - START
+          - READY
+          - SHUTDOWN
+          type: object
+        scripts:
+          items:
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+              stage:
+                type: string
+              state:
+                type: string
+            required:
+            - stage
+            - name
+            - state
+            type: object
+          type: array
+      required:
+      - completed
+      - scripts
+      type: object
+    InitScriptsStage:
+      additionalProperties: false
+      properties:
+        completed:
+          type: boolean
+        scripts:
+          items:
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+              stage:
+                type: string
+              state:
+                type: string
+            required:
+            - stage
+            - name
+            - state
+            type: object
+          type: array
+      required:
+      - completed
+      - scripts
+      type: object
+    SESDestination:
+      type: object
+      description: Possible destination of a SES message
+      properties:
+        ToAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+        CcAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+        BccAddresses:
+          type: array
+          items:
+            type: string
+            format: email
+      additionalProperties: false
+    SesSentEmail:
+      additionalProperties: false
+      properties:
+        Body:
+          additionalProperties: false
+          properties:
+            html_part:
+              type: string
+            text_part:
+              type: string
+          required:
+          - text_part
+          type: object
+        Destination:
+          $ref: '#/components/schemas/SESDestination'
+        Id:
+          type: string
+        RawData:
+          type: string
+        Region:
+          type: string
+        Source:
+          type: string
+        Subject:
+          type: string
+        Template:
+          type: string
+        TemplateData:
+          type: string
+        Timestamp:
+          type: string
+      required:
+      - Id
+      - Region
+      - Timestamp
+      - Source
+      type: object
+    SessionInfo:
+      additionalProperties: false
+      properties:
+        edition:
+          type: string
+        is_docker:
+          type: boolean
+        is_license_activated:
+          type: boolean
+        machine_id:
+          type: string
+        server_time_utc:
+          type: string
+        session_id:
+          type: string
+        system:
+          type: string
+        uptime:
+          type: integer
+        version:
+          type: string
+      required:
+      - version
+      - edition
+      - is_license_activated
+      - session_id
+      - machine_id
+      - system
+      - is_docker
+      - server_time_utc
+      - uptime
+      type: object
+    SnsSubscriptionTokenError:
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+        subscription_arn:
+          type: string
+      required:
+      - error
+      - subscription_arn
+      type: object
+    SNSPlatformEndpointMessage:
+      type: object
+      description: Message sent to a platform endpoint via SNS
+      additionalProperties: false
+      properties:
+        TargetArn:
+          type: string
+        TopicArn:
+          type: string
+        Message:
+          type: string
+        MessageAttributes:
+          type: object
+        MessageStructure:
+          type: string
+        Subject:
+          type:
+          - string
+          - 'null'
+        MessageId:
+          type: string
+    SNSMessage:
+      type: object
+      description: Message sent via SNS
+      properties:
+        PhoneNumber:
+          type: string
+        TopicArn:
+          type:
+          - string
+          - 'null'
+        SubscriptionArn:
+          type:
+          - string
+          - 'null'
+        MessageId:
+          type: string
+        Message:
+          type: string
+        MessageAttributes:
+          type: object
+        MessageStructure:
+          type:
+          - string
+          - 'null'
+        Subject:
+          type:
+          - string
+          - 'null'
+    SNSPlatformEndpointMessages:
+      type: object
+      description: |
+        Messages sent to the platform endpoint retrieved via the retrospective endpoint.
+        The endpoint ARN is the key with a list of messages as value.
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/SNSPlatformEndpointMessage'
+    SMSMessages:
+      type: object
+      description: |
+        SMS messages retrieved via the retrospective endpoint.
+        The phone number is the key with a list of messages as value.
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/SNSMessage'
+    SNSPlatformEndpointResponse:
+      type: object
+      additionalProperties: false
+      description: Response payload for the /_aws/sns/platform-endpoint-messages endpoint
+      properties:
+        region:
+          type: string
+          description: The AWS region, e.g., us-east-1
+        platform_endpoint_messages:
+          $ref: '#/components/schemas/SNSPlatformEndpointMessages'
+      required:
+      - region
+      - platform_endpoint_messages
+    SNSSMSMessagesResponse:
+      type: object
+      additionalProperties: false
+      description: Response payload for the /_aws/sns/sms-messages endpoint
+      properties:
+        region:
+          type: string
+          description: The AWS region, e.g., us-east-1
+        sms_messages:
+          $ref: '#/components/schemas/SMSMessages'
+      required:
+      - region
+      - sms_messages
+    ReceiveMessageRequest:
+      type: object
+      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
+      required:
+      - QueueUrl
+      properties:
+        QueueUrl:
+          type: string
+          format: uri
+        AttributeNames:
+          type: array
+          items:
+            type: string
+        MessageSystemAttributeNames:
+          type: array
+          items:
+            type: string
+        MessageAttributeNames:
+          type: array
+          items:
+            type: string
+        MaxNumberOfMessages:
+          type: integer
+        VisibilityTimeout:
+          type: integer
+        WaitTimeSeconds:
+          type: integer
+        ReceiveRequestAttemptId:
+          type: string
+    ReceiveMessageResult:
+      type: object
+      description: https://github.com/boto/botocore/blob/develop/botocore/data/sqs/2012-11-05/service-2.json
+      properties:
+        Messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+    Message:
+      type: object
+      properties:
+        MessageId:
+          type:
+          - string
+          - 'null'
+        ReceiptHandle:
+          type:
+          - string
+          - 'null'
+        MD5OfBody:
+          type:
+          - string
+          - 'null'
+        Body:
+          type:
+          - string
+          - 'null'
+        Attributes:
+          type: object
+        MessageAttributes:
+          type: object
+    CloudWatchMetrics:
+      additionalProperties: false
+      properties:
+        metrics:
+          items:
+            additionalProperties: false
+            properties:
+              account:
+                description: Account ID
+                type: string
+              d:
+                description: Dimensions
+                items:
+                  additionalProperties: false
+                  properties:
+                    n:
+                      description: Dimension name
+                      type: string
+                    v:
+                      description: Dimension value
+                      oneOf:
+                      - type: string
+                      - type: integer
+                  required:
+                  - n
+                  - v
+                  type: object
+                type: array
+              n:
+                description: Metric name
+                type: string
+              ns:
+                description: Namespace
+                type: string
+              region:
+                description: Region name
+                type: string
+              t:
+                description: Timestamp
+                oneOf:
+                - type: string
+                  format: date-time
+                - type: number
+              v:
+                description: Metric value
+                oneOf:
+                - type: string
+                - type: integer
+            required:
+            - ns
+            - n
+            - v
+            - t
+            - d
+            - account
+            - region
+            type: object
+          type: array
+      required:
+      - metrics
+      type: object
 paths:
+  /_aws/cognito-idp/forgotPassword:
+    get:
+      description: Cognito forgot password endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+    post:
+      description: Cognito forgot password endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/login:
+    get:
+      description: Cognito login endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+    post:
+      description: Cognito login endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/logout:
+    get:
+      description: Cognito logout endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+    post:
+      description: Cognito logout endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/oauth2/authorize:
+    get:
+      description: Cognito OAuth 2.0 authorization endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/oauth2/token:
+    post:
+      description: Cognito OAuth 2.0 token endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/token-endpoint.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/oauth2/revoke:
+    post:
+      description: Cognito OAuth 2.0 token revocation endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/revocation-endpoint.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/oauth2/userInfo:
+    get:
+      description: Cognito OpenID Connect userInfo endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/saml2/idpresponse:
+    get:
+      description: Cognito SAML 2.0 idpresponse endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/saml2-idpresponse-endpoint.html
+      tags:
+      - pro
+      - aws
+    post:
+      description: Cognito SAML 2.0 idpresponse endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/saml2-idpresponse-endpoint.html
+      tags:
+      - pro
+      - aws
+  /_aws/cognito-idp/signup:
+    get:
+      description: Cognito signup endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+    post:
+      description: Cognito signup endpoint
+      externalDocs:
+        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
+      tags:
+      - pro
+      - aws
+  /_aws/iam/config:
+    get:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      responses:
+        200:
+          description: Successful retrieval of configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IamConfig'
+    post:
+      description: IAM config endpoint
+      tags:
+      - pro
+      - aws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IamConfig'
+      responses:
+        200:
+          description: Successful setting of the new configuration.
+        400:
+          description: Bad request.
+  /_aws/iam/check-actions-allowed:
+    post:
+      description: Test if the given actions are allowed on the specific resource
+      tags:
+      - pro
+      - aws
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckActionsRequest'
+      responses:
+        200:
+          description: Successful test. It is still required to inspect the response
+            as it can be denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckActionsResponse'
+  /_aws/iot/LocalStackIoTRootCA.pem:
+    get:
+      description: Retrieve certificate for LocalStack IoT root certificate authority
+      tags:
+      - pro
+      - aws
+  /_aws/pinpoint/{application_id}/{reference_id}:
+    get:
+      description: Retrieve Pinpoint OTP code
+      tags:
+      - pro
+      - aws
+      parameters:
+      - name: application_id
+        in: path
+        required: true
+        description: Pinpoint application ID
+        schema:
+          type: string
+      - name: reference_id
+        in: path
+        required: true
+        description: Reference ID that was used in SentOTPMessage
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OTP message details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - AllowedAttempts
+                - CodeLength
+                - DestinationIdentity
+                - ReferenceId
+                - OriginationIdentity
+                - ValidityPeriod
+                - Attempts
+                - ApplicationId
+                - CreatedTimestamp
+                - Code
+                properties:
+                  AllowedAttempts:
+                    type: integer
+                    maximum: 5
+                    description: Maximum number of allowed attempts for OTP validation.
+                  BrandName:
+                    type: string
+                    description: Name of the brand that is associated with the OTP
+                      code.
+                  CodeLength:
+                    type: integer
+                    minimum: 5
+                    maximum: 8
+                    description: Number of digits in the OTP code that was sent.
+                  DestinationIdentity:
+                    type: string
+                    description: Phone number that the OTP code was sent to.
+                  EntityId:
+                    type: string
+                    description: ID registered with the regulatory agency (India only).
+                  Language:
+                    type: string
+                    description: Language used when sending the message.
+                  OriginationIdentity:
+                    type: string
+                    description: Identity (e.g. short code) that is used to send the
+                      OTP code.
+                  ReferenceId:
+                    type: string
+                    minLength: 1
+                    maxLength: 48
+                    description: Unique reference ID that was used in the SendOTPMessage
+                      request.
+                  TemplateId:
+                    type: string
+                    description: ID that is registered with the regulatory agency
+                      (India only).
+                  ValidityPeriod:
+                    type: integer
+                    maximum: 60
+                    description: Time in minutes the OTP code is valid for.
+                  Attempts:
+                    type: string
+                    minimum: 0
+                    description: OTP validation attempts made so far.
+                  ApplicationId:
+                    type: string
+                    description: Identifier of the Pinpoint Application.
+                  CreatedTimestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the SendOTPMessage request.
+                  Code:
+                    type: string
+                    minLength: 5
+                    maxLength: 8
+                    description: One-time password.
+  /_localstack/chaos/effects:
+    post:
+      summary: Configure network effects
+      description: Network effects include things like latency, jitter, bandwidth
+        throttling etc. which do not lead to an application-level fault/exception.
+      operationId: set_network_effects
+      tags:
+      - pro
+      - chaos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkEffectsConfig'
+      responses:
+        200:
+          description: Successfully configured network effects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkEffectsConfig'
+        400:
+          description: Invalid request
+    get:
+      summary: Get current network effects configuration
+      tags:
+      - pro
+      - chaos
+      operationId: get_network_effects
+      description: Retrieve the current configuration for network latency effects
+        in Localstack Chaos.
+      responses:
+        200:
+          description: Successful retrieval of configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkEffectsConfig'
+  /_localstack/chaos/faults:
+    get:
+      summary: Get the current fault configuration
+      description: Retrieve the list of currently configured fault rules.
+      operationId: get_fault_rules
+      tags:
+      - pro
+      - chaos
+      responses:
+        200:
+          description: Successful retrieval of current configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of configured rules for faults.
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/FaultRule'
+    post:
+      summary: Set a new fault configuration
+      description: Set a new set of fault rules. Overwrite the previous ones.
+      operationId: set_fault_rules
+      tags:
+      - pro
+      - chaos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              description: List of rules for faults.
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/FaultRule'
+      responses:
+        200:
+          description: Successful retrieval of current configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of configured rules for faults.
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/FaultRule'
+        400:
+          description: Invalid request
+    patch:
+      summary: Add a new set of rules to the current configuration
+      description: Add new rules to the existing fault configuration.
+      operationId: add_fault_rules
+      tags:
+      - pro
+      - chaos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              description: List of configured rules for faults to be added.
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/FaultRule'
+      responses:
+        200:
+          description: Successful retrieval of current configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of configured rules for faults.
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/FaultRule'
+    delete:
+      summary: Delete a set of rules from the configuration
+      description: Remove rules from the fault configuration.
+      operationId: delete_fault_rules
+      tags:
+      - pro
+      - chaos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              description: List of configured rules for faults.
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/FaultRule'
+      responses:
+        200:
+          description: Successful retrieval of current configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: List of configured rules for faults.
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/FaultRule'
+        400:
+          description: Invalid request
+  /_localstack/cloudformation/deploy:
+    get:
+      description: UI to deploy and manage your CloudFormation stacks using public
+        templates
+      parameters:
+      - name: templateURL
+        in: query
+        required: false
+        description: URL to a CloudFormation template (JSON or YAML).
+        schema:
+          type: string
+          format: uri
+      responses:
+        '404':
+          description: Template not found.
+        '200':
+          description: HTML page for CloudFormation deployment.
+          content:
+            text/html:
+              schema:
+                type: string
+  /_localstack/pods:
+    get:
+      description: List cloud pods
+      operationId: listPods
+      tags:
+      - pro
+      - pods
+      parameters:
+      - description: User ID of the pod creator. Special values like `me` are accepted.
+        in: query
+        name: creator
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteConfig'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodList'
+          description: The list of Cloud Pods associated with a given identity
+    post:
+      description: Loads a pod state from a zip file and restores its services.
+      tags:
+      - pro
+      - pods
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pod:
+                  type: string
+                  format: binary
+              required:
+              - pod
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Pod state loaded successfully.
+          headers:
+            Content-Length:
+              description: Length of the pod in bytes.
+              schema:
+                type: integer
+        '400':
+          description: Bad request.
+        '422':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The pod state is incompatible with the current LocalStack version.
+  /_localstack/pods/environment:
+    get:
+      description: |
+        Retrieves some information about the current environment, like LocalStack and Moto versions.
+      tags:
+      - pro
+      - pods
+      responses:
+        '200':
+          description: A JSON object containing environment version information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  localstack_version:
+                    type: string
+                    description: Version of LocalStack.
+                  localstack_ext_version:
+                    type: string
+                    description: Version of LocalStack Pro.
+                  moto_ext_version:
+                    type: string
+                    description: Version of Moto used within LocalStack.
+                  pro:
+                    type: boolean
+                    description: Indicates whether LocalStack PRO is activated.
+  /_localstack/pods/remotes:
+    get:
+      description: Retrieves a list of all configured remotes.
+      operationId: list_remotes
+      tags:
+      - pro
+      - pods
+      responses:
+        '200':
+          description: A list of remotes.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  remotes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PodRemote'
+  /_localstack/pods/remotes/{name}:
+    get:
+      summary: Get a specific remote
+      description: Retrieves information about a specific remote by name.
+      operationId: get_remote
+      tags:
+      - pro
+      - pods
+      parameters:
+      - name: name
+        in: path
+        required: true
+        description: The name of the remote.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Details of the remote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodRemote'
+        '404':
+          description: Remote not found
+    post:
+      summary: Create a new remote
+      description: Creates a new remote with the specified name and configuration.
+      operationId: create_remote
+      tags:
+      - pro
+      - pods
+      parameters:
+      - name: name
+        in: path
+        required: true
+        description: The name of the new remote.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                protocols:
+                  type: array
+                  items:
+                    type: string
+                  description: Supported protocols of the remote.
+                remote_url:
+                  type: string
+                  description: URL of the remote server.
+      responses:
+        '200':
+          description: Remote created successfully.
+    delete:
+      summary: Delete a remote
+      description: Deletes a remote with the specified name.
+      operationId: delete_remote
+      tags:
+      - pro
+      - pods
+      parameters:
+      - name: name
+        in: path
+        required: true
+        description: The name of the remote to delete.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Remote deleted successfully.
+  /_localstack/pods/state:
+    get:
+      description: Exports the current state of the LocalStack container into a zip
+        file.
+      tags:
+      - pro
+      - pods
+      parameters:
+      - name: pod_name
+        in: query
+        description: The name of the pod to save. Defaults to a unique name based
+          on the current timestamp.
+        required: false
+        schema:
+          type: string
+      - name: services
+        in: query
+        description: Comma-separated list of service names to include in the exported
+          state.
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A zip file containing the exported pod state.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Specifies that the response is an attachment.
+              schema:
+                type: string
+            Content-Length:
+              description: The size of the zip file in bytes.
+              schema:
+                type: integer
+            x-localstack-pod-services:
+              description: Comma-separated list of services included in the pod state.
+              schema:
+                type: string
+            x-localstack-pod-size:
+              description: The size of the pod file in bytes.
+              schema:
+                type: integer
+  /_localstack/pods/state/metamodel:
+    get:
+      description: Extract a metamodel representing the state of the current LocalStack
+        session
+      responses:
+        '200':
+          content:
+            application/json: {}
+          description: Metamodel representing the state of the current LocalStack
+            session
+      tags:
+      - pro
+      - pods
+  /_localstack/pods/{name}:
+    delete:
+      operationId: deletePod
+      parameters:
+      - in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: local
+        required: false
+        description: If true, the pod will be deleted only from the local storage
+        schema:
+          type: string
+      - in: header
+        name: x-localstack-state-secret
+        required: false
+        description: A secret token for authenticating the request against the platform
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteConfig'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid request
+        '500':
+          description: Deletion failed
+      tags:
+      - pro
+      - pods
+    post:
+      description: Create and register a cloud pod version
+      operationId: savePod
+      parameters:
+      - description: Cloud pod name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: local
+        required: false
+        schema:
+          type: boolean
+      - description: Cloud pod version
+        in: query
+        name: version
+        required: false
+        schema:
+          type: string
+      - in: header
+        name: x-localstack-state-secret
+        required: false
+        description: A secret token for authenticating the request against the platform
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PodSaveRequest'
+      responses:
+        '200':
+          content:
+            application/x-ndjson: {}
+          description: The response is a sequence of JSON events, according to the
+            schema, separated by a newline
+        '400':
+          description: Invalid request
+      tags:
+      - pro
+      - pods
+    put:
+      description: Load a cloud pod version
+      operationId: loadPod
+      parameters:
+      - in: path
+        description: The name of the Cloud Pod to be loaded into the runtime
+        name: name
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: version
+        description: The version of the Cloud Pod to be loaded into the runtime
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: merge
+        description: Merge strategy to use when loading the pod
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: ignore_version_mismatches
+        description: Ignores version mismatches between the pod and the current LocalStack
+          version.
+        required: false
+        schema:
+          type: string
+      - in: header
+        name: x-localstack-state-secret
+        required: false
+        description: A secret token for authenticating the request against the platform
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteConfig'
+      responses:
+        '200':
+          content:
+            application/x-ndjson: {}
+          description: The response is a sequence of JSON events, according to the
+            schema, separated by a newline
+        '422':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The pod state is incompatible with the current LocalStack version
+      tags:
+      - pro
+      - pods
+  /_localstack/pods/{name}/versions:
+    get:
+      description: List versions for a cloud pod
+      operationId: getPodVersions
+      parameters:
+      - description: Cloud pod name
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      - in: header
+        name: x-localstack-state-secret
+        required: false
+        description: A secret token for authenticating the request against the platform
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteConfig'
+      responses:
+        '200':
+          description: A list of version details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodVersions'
+      tags:
+      - pro
+      - pods
+  /_localstack/replicator/jobs:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: List of replication jobs
+      operationId: listReplicationJobs
+      responses:
+        '200':
+          description: List of replication jobs
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationJob'
+    post:
+      tags:
+      - pro
+      - replicator
+      description: Submits a replication job
+      operationId: createReplicationJob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplicationRequest'
+      responses:
+        '200':
+          description: Replication Job submitted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationJob'
+        '400':
+          description: Invalid request
+        '415':
+          description: Content-Type was not 'application/json'
+  /_localstack/replicator/jobs/{job_id}:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: Get replication job
+      operationId: GetReplicationJob
+      parameters:
+      - description: Id of replication job
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Replication Job found
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/ReplicationJob'
+        '404':
+          description: Replication job not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /_localstack/replicator/resources:
+    get:
+      tags:
+      - pro
+      - replicator
+      description: List supported resources for replication
+      operationId: listSupportedResources
+      responses:
+        '200':
+          description: List of resources available for replication
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicationSupportedResource'
+  /_localstack/stackinfo:
+    get:
+      description: Collect information used to populate the dashboard info.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                properties:
+                  api_key:
+                    type: string
+                  duration_in_seconds:
+                    type: integer
+                  is_ci:
+                    type: boolean
+                  is_docker:
+                    type: boolean
+                  number_of_api_calls_error:
+                    type: integer
+                  number_of_api_calls_success:
+                    type: integer
+                  number_of_services:
+                    type: integer
+                  server_time_utc:
+                    type: string
+                  session_id:
+                    type: string
+                  system:
+                    type: string
+                  top_user_agent:
+                    type: string
+                  version:
+                    type: string
+                required:
+                - server_time_utc
+                - session_id
+                - api_key
+                - system
+                - version
+                - is_ci
+                - is_docker
+                - duration_in_seconds
+                - top_user_agent
+                - number_of_services
+                - number_of_api_calls_success
+                - number_of_api_calls_error
+                type: object
+          description: ''
+      tags:
+      - pro
+  /_localstack/state/load:
+    post:
+      description: Load all service states. By default, it starts the services when
+        loading their states.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadService'
+      responses:
+        '200':
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: '#/components/schemas/StateResult'
+          description: Successful or error is one of the status is 'error'
+      tags:
+      - pro
+      - state
+  /_localstack/state/reset:
+    post:
+      description: Reset all service states
+      responses:
+        '200':
+          description: Successful
+      tags:
+      - pro
+      - state
+  /_localstack/state/save:
+    post:
+      description: Save all service states
+      responses:
+        '200':
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: '#/components/schemas/StateResult'
+          description: Successful or error is one of the status is 'error'
+      tags:
+      - pro
+      - state
+  /_localstack/state/{service}/load:
+    post:
+      description: Load a service state. By default, it starts the service, if the
+        service hasn't started yet.
+      parameters:
+      - $ref: '#/components/parameters/ServiceName'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadService'
+      responses:
+        '200':
+          description: Successful
+        500:
+          description: Failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResult'
+        404:
+          description: Service not found
+      tags:
+      - pro
+      - state
+  /_localstack/state/{service}/reset:
+    post:
+      description: Reset a service state
+      parameters:
+      - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Successful
+        404:
+          description: Service not found
+      tags:
+      - pro
+      - state
+  /_localstack/state/{service}/save:
+    post:
+      description: Save a service state
+      parameters:
+      - $ref: '#/components/parameters/ServiceName'
+      responses:
+        '200':
+          description: Successful
+        500:
+          description: Failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResult'
+        404:
+          description: Service not found
+      tags:
+      - pro
+      - state
   /_aws/cloudwatch/metrics/raw:
     get:
       description: Retrieve CloudWatch metrics
@@ -1560,1066 +2632,3 @@ paths:
           content:
             application/json: {}
           description: ''
-  /_aws/cognito-idp/forgotPassword:
-    get:
-      description: Cognito forgot password endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-    post:
-      description: Cognito forgot password endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/login:
-    get:
-      description: Cognito login endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-    post:
-      description: Cognito login endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/logout:
-    get:
-      description: Cognito logout endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-    post:
-      description: Cognito logout endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/oauth2/authorize:
-    get:
-      description: Cognito OAuth 2.0 authorization endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/oauth2/token:
-    post:
-      description: Cognito OAuth 2.0 token endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/token-endpoint.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/oauth2/revoke:
-    post:
-      description: Cognito OAuth 2.0 token revocation endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/revocation-endpoint.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/oauth2/userInfo:
-    get:
-      description: Cognito OpenID Connect userInfo endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/saml2/idpresponse:
-    get:
-      description: Cognito SAML 2.0 idpresponse endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/saml2-idpresponse-endpoint.html
-      tags:
-      - pro
-      - aws
-    post:
-      description: Cognito SAML 2.0 idpresponse endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/saml2-idpresponse-endpoint.html
-      tags:
-      - pro
-      - aws
-  /_aws/cognito-idp/signup:
-    get:
-      description: Cognito signup endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-    post:
-      description: Cognito signup endpoint
-      externalDocs:
-        url: https://docs.aws.amazon.com/cognito/latest/developerguide/hosted-UI-endpoints.html
-      tags:
-      - pro
-      - aws
-  /_aws/iam/config:
-    get:
-      description: IAM config endpoint
-      tags:
-      - pro
-      - aws
-      responses:
-        200:
-          description: Successful retrieval of configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IamConfig'
-    post:
-      description: IAM config endpoint
-      tags:
-      - pro
-      - aws
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/IamConfig'
-      responses:
-        200:
-          description: Successful setting of the new configuration.
-        400:
-          description: Bad request.
-  /_aws/iam/check-actions-allowed:
-    post:
-      description: Test if the given actions are allowed on the specific resource
-      tags:
-      - pro
-      - aws
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CheckActionsRequest'
-      responses:
-        200:
-          description: Successful test. It is still required to inspect the response
-            as it can be denied
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CheckActionsResponse'
-  /_aws/iot/LocalStackIoTRootCA.pem:
-    get:
-      description: Retrieve certificate for LocalStack IoT root certificate authority
-      tags:
-      - pro
-      - aws
-  /_aws/pinpoint/{application_id}/{reference_id}:
-    get:
-      description: Retrieve Pinpoint OTP code
-      tags:
-      - pro
-      - aws
-      parameters:
-      - name: application_id
-        in: path
-        required: true
-        description: Pinpoint application ID
-        schema:
-          type: string
-      - name: reference_id
-        in: path
-        required: true
-        description: Reference ID that was used in SentOTPMessage
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OTP message details
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: false
-                required:
-                - AllowedAttempts
-                - CodeLength
-                - DestinationIdentity
-                - ReferenceId
-                - OriginationIdentity
-                - ValidityPeriod
-                - Attempts
-                - ApplicationId
-                - CreatedTimestamp
-                - Code
-                properties:
-                  AllowedAttempts:
-                    type: integer
-                    maximum: 5
-                    description: Maximum number of allowed attempts for OTP validation.
-                  BrandName:
-                    type: string
-                    description: Name of the brand that is associated with the OTP
-                      code.
-                  CodeLength:
-                    type: integer
-                    minimum: 5
-                    maximum: 8
-                    description: Number of digits in the OTP code that was sent.
-                  DestinationIdentity:
-                    type: string
-                    description: Phone number that the OTP code was sent to.
-                  EntityId:
-                    type: string
-                    description: ID registered with the regulatory agency (India only).
-                  Language:
-                    type: string
-                    description: Language used when sending the message.
-                  OriginationIdentity:
-                    type: string
-                    description: Identity (e.g. short code) that is used to send the
-                      OTP code.
-                  ReferenceId:
-                    type: string
-                    minLength: 1
-                    maxLength: 48
-                    description: Unique reference ID that was used in the SendOTPMessage
-                      request.
-                  TemplateId:
-                    type: string
-                    description: ID that is registered with the regulatory agency
-                      (India only).
-                  ValidityPeriod:
-                    type: integer
-                    maximum: 60
-                    description: Time in minutes the OTP code is valid for.
-                  Attempts:
-                    type: string
-                    minimum: 0
-                    description: OTP validation attempts made so far.
-                  ApplicationId:
-                    type: string
-                    description: Identifier of the Pinpoint Application.
-                  CreatedTimestamp:
-                    type: string
-                    format: date-time
-                    description: Timestamp of the SendOTPMessage request.
-                  Code:
-                    type: string
-                    minLength: 5
-                    maxLength: 8
-                    description: One-time password.
-  /_localstack/chaos/effects:
-    post:
-      summary: Configure network effects
-      description: Network effects include things like latency, jitter, bandwidth
-        throttling etc. which do not lead to an application-level fault/exception.
-      operationId: set_network_effects
-      tags:
-      - pro
-      - chaos
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NetworkEffectsConfig'
-      responses:
-        200:
-          description: Successfully configured network effects
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NetworkEffectsConfig'
-        400:
-          description: Invalid request
-    get:
-      summary: Get current network effects configuration
-      tags:
-      - pro
-      - chaos
-      operationId: get_network_effects
-      description: Retrieve the current configuration for network latency effects
-        in Localstack Chaos.
-      responses:
-        200:
-          description: Successful retrieval of configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NetworkEffectsConfig'
-  /_localstack/chaos/faults:
-    get:
-      summary: Get the current fault configuration
-      description: Retrieve the list of currently configured fault rules.
-      operationId: get_fault_rules
-      tags:
-      - pro
-      - chaos
-      responses:
-        200:
-          description: Successful retrieval of current configuration.
-          content:
-            application/json:
-              schema:
-                type: array
-                description: List of configured rules for faults.
-                uniqueItems: true
-                items:
-                  $ref: '#/components/schemas/FaultRule'
-    post:
-      summary: Set a new fault configuration
-      description: Set a new set of fault rules. Overwrite the previous ones.
-      operationId: set_fault_rules
-      tags:
-      - pro
-      - chaos
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              description: List of rules for faults.
-              uniqueItems: true
-              items:
-                $ref: '#/components/schemas/FaultRule'
-      responses:
-        200:
-          description: Successful retrieval of current configuration.
-          content:
-            application/json:
-              schema:
-                type: array
-                description: List of configured rules for faults.
-                uniqueItems: true
-                items:
-                  $ref: '#/components/schemas/FaultRule'
-        400:
-          description: Invalid request
-    patch:
-      summary: Add a new set of rules to the current configuration
-      description: Add new rules to the existing fault configuration.
-      operationId: add_fault_rules
-      tags:
-      - pro
-      - chaos
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              description: List of configured rules for faults to be added.
-              uniqueItems: true
-              items:
-                $ref: '#/components/schemas/FaultRule'
-      responses:
-        200:
-          description: Successful retrieval of current configuration.
-          content:
-            application/json:
-              schema:
-                type: array
-                description: List of configured rules for faults.
-                uniqueItems: true
-                items:
-                  $ref: '#/components/schemas/FaultRule'
-    delete:
-      summary: Delete a set of rules from the configuration
-      description: Remove rules from the fault configuration.
-      operationId: delete_fault_rules
-      tags:
-      - pro
-      - chaos
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              description: List of configured rules for faults.
-              uniqueItems: true
-              items:
-                $ref: '#/components/schemas/FaultRule'
-      responses:
-        200:
-          description: Successful retrieval of current configuration.
-          content:
-            application/json:
-              schema:
-                type: array
-                description: List of configured rules for faults.
-                uniqueItems: true
-                items:
-                  $ref: '#/components/schemas/FaultRule'
-        400:
-          description: Invalid request
-  /_localstack/cloudformation/deploy:
-    get:
-      description: UI to deploy and manage your CloudFormation stacks using public
-        templates
-      parameters:
-      - name: templateURL
-        in: query
-        required: false
-        description: URL to a CloudFormation template (JSON or YAML).
-        schema:
-          type: string
-          format: uri
-      responses:
-        '404':
-          description: Template not found.
-        '200':
-          description: HTML page for CloudFormation deployment.
-          content:
-            text/html:
-              schema:
-                type: string
-  /_localstack/pods:
-    get:
-      description: List cloud pods
-      operationId: listPods
-      tags:
-      - pro
-      - pods
-      parameters:
-      - description: User ID of the pod creator. Special values like `me` are accepted.
-        in: query
-        name: creator
-        required: false
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoteConfig'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PodList'
-          description: The list of Cloud Pods associated with a given identity
-    post:
-      description: Loads a pod state from a zip file and restores its services.
-      tags:
-      - pro
-      - pods
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                pod:
-                  type: string
-                  format: binary
-              required:
-              - pod
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '201':
-          description: Pod state loaded successfully.
-          headers:
-            Content-Length:
-              description: Length of the pod in bytes.
-              schema:
-                type: integer
-        '400':
-          description: Bad request.
-  /_localstack/pods/environment:
-    get:
-      description: |
-        Retrieves some information about the current environment, like LocalStack and Moto versions.
-      tags:
-      - pro
-      - pods
-      responses:
-        '200':
-          description: A JSON object containing environment version information.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  localstack_version:
-                    type: string
-                    description: Version of LocalStack.
-                  localstack_ext_version:
-                    type: string
-                    description: Version of LocalStack Pro.
-                  moto_ext_version:
-                    type: string
-                    description: Version of Moto used within LocalStack.
-                  pro:
-                    type: boolean
-                    description: Indicates whether LocalStack PRO is activated.
-  /_localstack/pods/remotes:
-    get:
-      description: Retrieves a list of all configured remotes.
-      operationId: list_remotes
-      tags:
-      - pro
-      - pods
-      responses:
-        '200':
-          description: A list of remotes.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  remotes:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PodRemote'
-  /_localstack/pods/remotes/{name}:
-    get:
-      summary: Get a specific remote
-      description: Retrieves information about a specific remote by name.
-      operationId: get_remote
-      tags:
-      - pro
-      - pods
-      parameters:
-      - name: name
-        in: path
-        required: true
-        description: The name of the remote.
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Details of the remote.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PodRemote'
-        '404':
-          description: Remote not found
-    post:
-      summary: Create a new remote
-      description: Creates a new remote with the specified name and configuration.
-      operationId: create_remote
-      tags:
-      - pro
-      - pods
-      parameters:
-      - name: name
-        in: path
-        required: true
-        description: The name of the new remote.
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                protocols:
-                  type: array
-                  items:
-                    type: string
-                  description: Supported protocols of the remote.
-                remote_url:
-                  type: string
-                  description: URL of the remote server.
-      responses:
-        '200':
-          description: Remote created successfully.
-    delete:
-      summary: Delete a remote
-      description: Deletes a remote with the specified name.
-      operationId: delete_remote
-      tags:
-      - pro
-      - pods
-      parameters:
-      - name: name
-        in: path
-        required: true
-        description: The name of the remote to delete.
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Remote deleted successfully.
-  /_localstack/pods/state:
-    get:
-      description: Exports the current state of the LocalStack container into a zip
-        file.
-      tags:
-      - pro
-      - pods
-      parameters:
-      - name: pod_name
-        in: query
-        description: The name of the pod to save. Defaults to a unique name based
-          on the current timestamp.
-        required: false
-        schema:
-          type: string
-      - name: services
-        in: query
-        description: Comma-separated list of service names to include in the exported
-          state.
-        required: false
-        schema:
-          type: string
-      responses:
-        '200':
-          description: A zip file containing the exported pod state.
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-          headers:
-            Content-Disposition:
-              description: Specifies that the response is an attachment.
-              schema:
-                type: string
-            Content-Length:
-              description: The size of the zip file in bytes.
-              schema:
-                type: integer
-            x-localstack-pod-services:
-              description: Comma-separated list of services included in the pod state.
-              schema:
-                type: string
-            x-localstack-pod-size:
-              description: The size of the pod file in bytes.
-              schema:
-                type: integer
-  /_localstack/pods/state/metamodel:
-    get:
-      description: Extract a metamodel representing the state of the current LocalStack
-        session
-      responses:
-        '200':
-          content:
-            application/json: {}
-          description: Metamodel representing the state of the current LocalStack
-            session
-      tags:
-      - pro
-      - pods
-  /_localstack/pods/{name}:
-    delete:
-      operationId: deletePod
-      parameters:
-      - in: path
-        name: name
-        required: true
-        schema:
-          type: string
-      - in: query
-        name: local
-        required: false
-        description: If true, the pod will be deleted only from the local storage
-        schema:
-          type: string
-      - in: header
-        name: x-localstack-state-secret
-        required: false
-        description: A secret token for authenticating the request against the platform
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoteConfig'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Invalid request
-        '500':
-          description: Deletion failed
-      tags:
-      - pro
-      - pods
-    post:
-      description: Create and register a cloud pod version
-      operationId: savePod
-      parameters:
-      - description: Cloud pod name
-        in: path
-        name: name
-        required: true
-        schema:
-          type: string
-      - in: query
-        name: local
-        required: false
-        schema:
-          type: boolean
-      - description: Cloud pod version
-        in: query
-        name: version
-        required: false
-        schema:
-          type: string
-      - in: header
-        name: x-localstack-state-secret
-        required: false
-        description: A secret token for authenticating the request against the platform
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PodSaveRequest'
-      responses:
-        '200':
-          content:
-            application/x-ndjson: {}
-          description: The response is a sequence of JSON events, according to the
-            schema, separated by a newline
-        '400':
-          description: Invalid request
-      tags:
-      - pro
-      - pods
-    put:
-      description: Load a cloud pod version
-      operationId: loadPod
-      parameters:
-      - in: path
-        description: The name of the Cloud Pod to be loaded into the runtime
-        name: name
-        required: true
-        schema:
-          type: string
-      - in: query
-        name: version
-        description: The version of the Cloud Pod to be loaded into the runtime
-        required: false
-        schema:
-          type: string
-      - in: query
-        name: merge
-        description: Merge strategy to use when loading the pod
-        required: false
-        schema:
-          type: string
-      - in: query
-        name: ignore_version_mismatches
-        description: Ignores version mismatches between the pod and the current LocalStack
-          version.
-        required: false
-        schema:
-          type: string
-      - in: header
-        name: x-localstack-state-secret
-        required: false
-        description: A secret token for authenticating the request against the platform
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoteConfig'
-      responses:
-        '200':
-          content:
-            application/x-ndjson: {}
-          description: The response is a sequence of JSON events, according to the
-            schema, separated by a newline
-        '422':
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: The pod state is incompatible with the current LocalStack version
-      tags:
-      - pro
-      - pods
-  /_localstack/pods/{name}/versions:
-    get:
-      description: List versions for a cloud pod
-      operationId: getPodVersions
-      parameters:
-      - description: Cloud pod name
-        in: path
-        name: name
-        required: true
-        schema:
-          type: string
-      - in: header
-        name: x-localstack-state-secret
-        required: false
-        description: A secret token for authenticating the request against the platform
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoteConfig'
-      responses:
-        '200':
-          description: A list of version details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PodVersions'
-      tags:
-      - pro
-      - pods
-  /_localstack/replicator/jobs:
-    get:
-      tags:
-      - pro
-      - replicator
-      description: List of replication jobs
-      operationId: listReplicationJobs
-      responses:
-        '200':
-          description: List of replication jobs
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplicationJob'
-    post:
-      tags:
-      - pro
-      - replicator
-      description: Submits a replication job
-      operationId: createReplicationJob
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReplicationRequest'
-      responses:
-        '200':
-          description: Replication Job submitted
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplicationJob'
-        '400':
-          description: Invalid request
-        '415':
-          description: Content-Type was not 'application/json'
-  /_localstack/replicator/jobs/{job_id}:
-    get:
-      tags:
-      - pro
-      - replicator
-      description: Get replication job
-      operationId: GetReplicationJob
-      parameters:
-      - description: Id of replication job
-        in: path
-        name: job_id
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Replication Job found
-          content:
-            application/json:
-              schema:
-                type: object
-                $ref: '#/components/schemas/ReplicationJob'
-        '404':
-          description: Replication job not found
-          content:
-            text/plain:
-              schema:
-                type: string
-  /_localstack/replicator/resources:
-    get:
-      tags:
-      - pro
-      - replicator
-      description: List supported resources for replication
-      operationId: listSupportedResources
-      responses:
-        '200':
-          description: List of resources available for replication
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplicationSupportedResource'
-  /_localstack/stackinfo:
-    get:
-      description: Collect information used to populate the dashboard info.
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                properties:
-                  api_key:
-                    type: string
-                  duration_in_seconds:
-                    type: integer
-                  is_ci:
-                    type: boolean
-                  is_docker:
-                    type: boolean
-                  number_of_api_calls_error:
-                    type: integer
-                  number_of_api_calls_success:
-                    type: integer
-                  number_of_services:
-                    type: integer
-                  server_time_utc:
-                    type: string
-                  session_id:
-                    type: string
-                  system:
-                    type: string
-                  top_user_agent:
-                    type: string
-                  version:
-                    type: string
-                required:
-                - server_time_utc
-                - session_id
-                - api_key
-                - system
-                - version
-                - is_ci
-                - is_docker
-                - duration_in_seconds
-                - top_user_agent
-                - number_of_services
-                - number_of_api_calls_success
-                - number_of_api_calls_error
-                type: object
-          description: ''
-      tags:
-      - pro
-  /_localstack/state/load:
-    post:
-      description: Load all service states. By default, it starts the services when
-        loading their states.
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoadService'
-      responses:
-        '200':
-          content:
-            application/x-ndjson:
-              schema:
-                $ref: '#/components/schemas/StateResult'
-          description: Successful or error is one of the status is 'error'
-      tags:
-      - pro
-      - state
-  /_localstack/state/reset:
-    post:
-      description: Reset all service states
-      responses:
-        '200':
-          description: Successful
-      tags:
-      - pro
-      - state
-  /_localstack/state/save:
-    post:
-      description: Save all service states
-      responses:
-        '200':
-          content:
-            application/x-ndjson:
-              schema:
-                $ref: '#/components/schemas/StateResult'
-          description: Successful or error is one of the status is 'error'
-      tags:
-      - pro
-      - state
-  /_localstack/state/{service}/load:
-    post:
-      description: Load a service state. By default, it starts the service, if the
-        service hasn't started yet.
-      parameters:
-      - $ref: '#/components/parameters/ServiceName'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoadService'
-      responses:
-        '200':
-          description: Successful
-        500:
-          description: Failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StateResult'
-        404:
-          description: Service not found
-      tags:
-      - pro
-      - state
-  /_localstack/state/{service}/reset:
-    post:
-      description: Reset a service state
-      parameters:
-      - $ref: '#/components/parameters/ServiceName'
-      responses:
-        '200':
-          description: Successful
-        404:
-          description: Service not found
-      tags:
-      - pro
-      - state
-  /_localstack/state/{service}/save:
-    post:
-      description: Save a service state
-      parameters:
-      - $ref: '#/components/parameters/ServiceName'
-      responses:
-        '200':
-          description: Successful
-        500:
-          description: Failure
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StateResult'
-        404:
-          description: Service not found
-      tags:
-      - pro
-      - state
