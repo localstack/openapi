@@ -8,7 +8,7 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 4.13.1
+  version: 4.14.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
@@ -1366,6 +1366,12 @@ paths:
                 type: integer
         '400':
           description: Bad request.
+        '422':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The pod state is incompatible with the current LocalStack version.
   /_localstack/pods/environment:
     get:
       description: |
@@ -1670,6 +1676,12 @@ paths:
             application/x-ndjson: {}
           description: The response is a sequence of JSON events, according to the
             schema, separated by a newline
+        '422':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The pod state is incompatible with the current LocalStack version
       tags:
       - pro
       - pods
