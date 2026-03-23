@@ -24,9 +24,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: "Install release helper"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PRO_GITHUB_TOKEN }}
         run: |
           mkdir -p bin
-          curl -o bin/release-helper.sh -L https://api.github.com/repos/localstack/localstack/contents/bin/release-helper.sh -H 'Accept: application/vnd.github.v3.raw'
+          curl -fsSL \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/localstack/localstack-core/contents/bin/release-helper.sh" \
+            -o bin/release-helper.sh
           chmod +x bin/release-helper.sh
 
       - name: "Prepare git config"
