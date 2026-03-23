@@ -53,6 +53,11 @@ jobs:
           bin/release-helper.sh pip-download-retry localstack-core ${{ env.release }}
           bin/release-helper.sh pip-download-retry localstack-ext ${{ env.release }}
 
+      - name: Install OS packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --allow-downgrades libsnappy-dev jq libvirt-dev
+
       - name: "Install LocalStack and LocalStack-ext"
         run: |
           python -m venv .venv
