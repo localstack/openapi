@@ -1,7 +1,6 @@
 name: Release OpenAPI spec
 on:
   repository_dispatch:
-    types: [release-openapi]
   workflow_dispatch:
     inputs:
       releaseVersion:
@@ -10,8 +9,10 @@ on:
         description: The version to be released
 
 env:
-  git_user_name: localstack[bot]
-  git_user_email: localstack-bot@users.noreply.github.com
+  GIT_AUTHOR_NAME: localstack[bot]
+  GIT_AUTHOR_EMAIL: localstack-bot@users.noreply.github.com
+  GIT_COMMITTER_NAME: localstack[bot]
+  GIT_COMMITTER_EMAIL: localstack-bot@users.noreply.github.com
 
 jobs:
   release-localstack-openapi:
@@ -20,55 +21,38 @@ jobs:
       release: ${{ github.event_name == 'workflow_dispatch' && inputs.releaseVersion || github.event.client_payload.releaseVersion}}
 
     steps:
-      - name: "Checkout OpenAPI repo"
+      - name: Checkout OpenAPI
         uses: actions/checkout@v4
 
-      - name: "Install release helper"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PRO_GITHUB_TOKEN }}
-        run: |
-          mkdir -p bin
-          curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github.v3.raw" \
-            "https://api.github.com/repos/localstack/localstack-core/contents/bin/release-helper.sh" \
-            -o bin/release-helper.sh
-          chmod +x bin/release-helper.sh
-
-      - name: "Prepare git config"
-        run: |
-          git config user.name ${{ env.git_user_name }}
-          git config user.email ${{ env.git_user_email }}
-
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
-
-      - name: "Wait for localstack, localstack-core, and localstack-ext release to appear"
-        timeout-minutes: 3
-        run: |
-          bin/release-helper.sh pip-download-retry localstack ${{ env.release }}
-          bin/release-helper.sh pip-download-retry localstack-core ${{ env.release }}
-          bin/release-helper.sh pip-download-retry localstack-ext ${{ env.release }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
 
       - name: Install OS packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libsnappy-dev jq libvirt-dev
+          sudo apt-get install -y --allow-downgrades libvirt-dev
 
-      - name: "Install LocalStack and LocalStack-ext"
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install localstack-ext==${{ env.release }}
+      - name: Checkout Pro
+        uses: actions/checkout@v4
+        id: pro-checkout
+        with:
+          repository: localstack/localstack-pro
+          path: localstack-pro
+          token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          ref: v${{ env.release }}
 
-      - name: "Create tagged LocalStack OpenAPI spec"
+      - name: Install OS packages
         run: |
-          source .venv/bin/activate
-          pip install click
-          pip install pyyaml
+          sudo apt-get update
+          sudo apt-get install -y --allow-downgrades libvirt-dev
+
+      - name: Install Python Dependencies for Pro
+        working-directory: localstack-pro/localstack-pro-aws/
+        run: make install
+ 
+      - name: Generate the latest spec
+        run: |
+          source localstack-pro/localstack-pro-aws/.venv/bin/activate
           python bin/update-aws-spec.py
 
       - name: "Commit release version"
