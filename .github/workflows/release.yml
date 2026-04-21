@@ -24,42 +24,22 @@ jobs:
       - name: Checkout OpenAPI
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libvirt-dev
-
-      - name: Checkout Pro
-        uses: actions/checkout@v4
-        id: pro-checkout
+      - name: Generate spec
+        uses: ./.github/actions/generate-spec
         with:
-          repository: localstack/localstack-pro
-          path: localstack-pro
-          token: ${{ secrets.PRO_GITHUB_TOKEN }}
-          ref: v${{ env.release }}
-
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libvirt-dev
-
-      - name: Install Python Dependencies for Pro
-        working-directory: localstack-pro/localstack-pro-aws/
-        run: make install
- 
-      - name: Generate the latest spec
-        run: |
-          source localstack-pro/localstack-pro-aws/.venv/bin/activate
-          python bin/update-aws-spec.py
+          pro-ref: v${{ env.release }}
+          pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
 
       - name: "Commit release version"
         # We set the openapi folder as a DEPENDENCY_FILE merely to have it added to the release commit
         run: |
           DEPENDENCY_FILE="openapi/" bin/release-helper.sh git-commit-release ${{ env.release }}
           git push --follow-tags
+
+      - name: "Show git modifications"
+        run: |
+          git log --oneline -n 2
+          git show HEAD
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -69,8 +49,3 @@ jobs:
             openapi/emulators/localstack-spec.yml
           tag_name: v${{ env.release }}
           draft: true
-
-      - name: "Show git modifications"
-        run: |
-          git log --oneline -n 2
-          git show HEAD
