@@ -1,7 +1,6 @@
 name: Release OpenAPI spec
 on:
   repository_dispatch:
-    types: [release-openapi]
   workflow_dispatch:
     inputs:
       releaseVersion:
@@ -10,8 +9,10 @@ on:
         description: The version to be released
 
 env:
-  git_user_name: localstack[bot]
-  git_user_email: localstack-bot@users.noreply.github.com
+  GIT_AUTHOR_NAME: localstack[bot]
+  GIT_AUTHOR_EMAIL: localstack-bot@users.noreply.github.com
+  GIT_COMMITTER_NAME: localstack[bot]
+  GIT_COMMITTER_EMAIL: localstack-bot@users.noreply.github.com
 
 jobs:
   release-localstack-openapi:
@@ -20,62 +21,25 @@ jobs:
       release: ${{ github.event_name == 'workflow_dispatch' && inputs.releaseVersion || github.event.client_payload.releaseVersion}}
 
     steps:
-      - name: "Checkout OpenAPI repo"
+      - name: Checkout OpenAPI
         uses: actions/checkout@v4
 
-      - name: "Install release helper"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PRO_GITHUB_TOKEN }}
-        run: |
-          mkdir -p bin
-          curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github.v3.raw" \
-            "https://api.github.com/repos/localstack/localstack-core/contents/bin/release-helper.sh" \
-            -o bin/release-helper.sh
-          chmod +x bin/release-helper.sh
-
-      - name: "Prepare git config"
-        run: |
-          git config user.name ${{ env.git_user_name }}
-          git config user.email ${{ env.git_user_email }}
-
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v5
+      - name: Generate spec
+        uses: ./.github/actions/generate-spec
         with:
-          python-version: 3.13
-
-      - name: "Wait for localstack, localstack-core, and localstack-ext release to appear"
-        timeout-minutes: 3
-        run: |
-          bin/release-helper.sh pip-download-retry localstack ${{ env.release }}
-          bin/release-helper.sh pip-download-retry localstack-core ${{ env.release }}
-          bin/release-helper.sh pip-download-retry localstack-ext ${{ env.release }}
-
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libsnappy-dev jq libvirt-dev
-
-      - name: "Install LocalStack and LocalStack-ext"
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install localstack-ext==${{ env.release }}
-
-      - name: "Create tagged LocalStack OpenAPI spec"
-        run: |
-          source .venv/bin/activate
-          pip install click
-          pip install pyyaml
-          python bin/update-aws-spec.py
+          pro-ref: v${{ env.release }}
+          pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
 
       - name: "Commit release version"
         # We set the openapi folder as a DEPENDENCY_FILE merely to have it added to the release commit
         run: |
           DEPENDENCY_FILE="openapi/" bin/release-helper.sh git-commit-release ${{ env.release }}
           git push --follow-tags
+
+      - name: "Show git modifications"
+        run: |
+          git log --oneline -n 2
+          git show HEAD
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -85,8 +49,3 @@ jobs:
             openapi/emulators/localstack-spec.yml
           tag_name: v${{ env.release }}
           draft: true
-
-      - name: "Show git modifications"
-        run: |
-          git log --oneline -n 2
-          git show HEAD

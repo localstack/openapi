@@ -1,0 +1,60 @@
+name: Generate OpenAPI spec
+description: Checks out localstack-pro, installs dependencies, and runs update-aws-spec.py.
+
+inputs:
+  pro-ref:
+    description: Ref to check out in localstack-pro. Leave empty to use the default branch.
+    required: false
+    default: ""
+  pro-token:
+    description: Token used to check out localstack-pro.
+    required: true
+  fallback-to-main:
+    description: If "true", fall back to the default branch when the specified ref cannot be checked out.
+    required: false
+    default: "false"
+  latest:
+    description: If "true", pass --latest to update-aws-spec.py.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Install OS packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --allow-downgrades libvirt-dev
+
+    - name: Checkout Pro
+      id: pro-checkout
+      uses: actions/checkout@v4
+      continue-on-error: ${{ inputs.fallback-to-main == 'true' }}
+      with:
+        repository: localstack/localstack-pro
+        path: localstack-pro
+        token: ${{ inputs.pro-token }}
+        ref: ${{ inputs.pro-ref }}
+
+    - name: Pro - fallback to default branch
+      if: ${{ inputs.fallback-to-main == 'true' && steps.pro-checkout.outcome == 'failure' }}
+      uses: actions/checkout@v4
+      with:
+        repository: localstack/localstack-pro
+        path: localstack-pro
+        token: ${{ inputs.pro-token }}
+
+    - name: Install Python dependencies for Pro
+      working-directory: localstack-pro/localstack-pro-aws/
+      shell: bash
+      run: make install
+
+    - name: Generate spec
+      shell: bash
+      run: |
+        source localstack-pro/localstack-pro-aws/.venv/bin/activate
+        python bin/update-aws-spec.py ${{ inputs.latest == 'true' && '--latest' || '' }}

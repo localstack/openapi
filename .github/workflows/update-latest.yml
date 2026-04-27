@@ -1,5 +1,5 @@
 name: Update OpenAPI specs to latest
-on: 
+on:
   repository_dispatch:
     types: [openapi-update]
   workflow_dispatch:
@@ -12,63 +12,14 @@ jobs:
       - name: Checkout OpenAPI
         uses: actions/checkout@v4
 
-      - name: "Set up Python 3.13"
-        id: setup-python
-        uses: actions/setup-python@v5
+      - name: Generate spec
+        uses: ./.github/actions/generate-spec
         with:
-          python-version: '3.13'
+          pro-ref: ${{ github.event.client_payload.ref }}
+          pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          fallback-to-main: "true"
+          latest: "true"
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install OS packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libsnappy-dev jq libvirt-dev
-
-      - name: Checkout Community
-        uses: actions/checkout@v4
-        id: community-checkout
-        continue-on-error: true
-        with:
-          repository: localstack/localstack
-          path: localstack
-          ref: ${{ github.event.client_payload.ref }}
-  
-      - name: Community - fallback to main branch
-        if: steps.community-checkout.outcome == 'failure'
-        uses: actions/checkout@v4
-        with:
-          repository: localstack/localstack
-          path: localstack
-
-      - name: Checkout Pro
-        uses: actions/checkout@v4
-        id: pro-checkout
-        continue-on-error: true
-        with:
-          repository: localstack/localstack-pro
-          path: localstack-pro
-          token: ${{ secrets.PRO_GITHUB_TOKEN }}
-          ref: ${{ github.event.client_payload.ref }}
-          
-      - name: Pro - fallback to main branch
-        if: steps.pro-checkout.outcome == 'failure'
-        uses: actions/checkout@v4
-        with:
-          repository: localstack/localstack-pro
-          path: localstack-pro
-          token: ${{ secrets.PRO_GITHUB_TOKEN }}
-
-      - name: Install Python Dependencies for Pro
-        working-directory: localstack-pro
-        run: make install
- 
-      - name: Generate the latest spec
-        run: |
-          source localstack-pro/localstack-pro-core/.venv/bin/activate
-          python bin/update-aws-spec.py --latest
-      
       - name: Create PR
         uses: peter-evans/create-pull-request@v7
         with:
