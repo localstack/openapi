@@ -24,19 +24,23 @@ jobs:
       - name: Checkout OpenAPI
         uses: actions/checkout@v4
 
-      - name: Generate spec
+      - name: Generate Spec
         uses: ./.github/actions/generate-spec
         with:
           pro-ref: v${{ env.release }}
           pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
 
-      - name: "Commit release version"
-        # We set the openapi folder as a DEPENDENCY_FILE merely to have it added to the release commit
+      - name: Commit Release Version
+        env:
+          DEPENDENCY_FILE: "openapi/"
+          RELEASE_VERSION: ${{ env.release }}
         run: |
-          DEPENDENCY_FILE="openapi/" bin/release-helper.sh git-commit-release ${{ env.release }}
-          git push --follow-tags
+          git add "${DEPENDENCY_FILE}"
+          git commit --allow-empty -m "Release: v${RELEASE_VERSION}"
+          git tag -a "v${RELEASE_VERSION}" -m "Release: v${RELEASE_VERSION}"
+          git push --follow-tags  
 
-      - name: "Show git modifications"
+      - name: Show Git Modifications
         run: |
           git log --oneline -n 2
           git show HEAD
