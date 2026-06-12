@@ -251,24 +251,111 @@ components:
         replication_config:
           type: object
           description: configuration object for custom replication
+        explore_strategy:
+          type: string
+          description: defines the exploration strategy used for the replication job
+          enum:
+          - SIMPLE
+          - TREE
+          default: SIMPLE
+        resources:
+          type: object
+          description: Lists replicated resources by status
+          properties:
+            succeeded:
+              type: array
+              items:
+                type: string
+            skipped:
+              type: array
+              items:
+                type: string
+            failed:
+              type: array
+              items:
+                type: object
+                properties:
+                  resource_identifier:
+                    type: string
+                  resource_type:
+                    type: string
+                  error:
+                    type: string
+                  root:
+                    type: object
+                    description: Present when the failed resource is a dependency
+                      of the root. Not present when the root itself failed.
+                    properties:
+                      resource_identifier:
+                        type: string
+                      resource_type:
+                        type: string
     ReplicationSupportedResource:
       additionalProperties: false
       type: object
+      required:
+      - resource_type
+      - service
       properties:
         resource_type:
           type: string
           description: Type of resource
-        policy_statements:
-          type: array
-          description: Required IAM permissions to replicate resource.
         service:
           type: string
           description: AWS service.
-        identifier:
-          type: string
-          description: Resource property or properties used as identifier. In case
-            there are multiple properties, join them with ':'. ie. `RepositoryName:<ImageTag[Optional]>`
-            for ecr repository can be used as `my-repo` or `my-repo:latest`
+        single:
+          type: object
+          description: Configuration items applicable to SINGLE_RESOURCE replication
+            type
+          properties:
+            policy_statements:
+              type: array
+              description: Required IAM permissions to replicate resource.
+              items:
+                type: string
+            identifier:
+              type: string
+              description: Resource property or properties used as identifier. In
+                case there are multiple properties, join them with ':'. ie. `RepositoryName:<ImageTag[Optional]>`
+                for ecr repository can be used as `my-repo` or `my-repo:latest`
+        batch:
+          type: object
+          description: Configuration items applicable to BATCH replication type
+          properties:
+            policy_statements:
+              type: array
+              description: Required IAM permissions to replicate resource.
+              items:
+                type: string
+            identifier:
+              type: string
+              description: Resource property or properties used as identifier. In
+                case there are multiple properties, join them with ':'. ie. `RepositoryName:<ImageTag[Optional]>`
+                for ecr repository can be used as `my-repo` or `my-repo:latest`
+        resource_tree:
+          type: object
+          description: Configuration items applicable to TREE exploration strategy,
+            when available
+          properties:
+            resources:
+              type: array
+              description: list of resources that will be replicated along with the
+                resource or batch of resources replicated
+              items:
+                type: string
+            extra_policy_statements:
+              type: array
+              description: Required IAM permissions to replicate the resources tree.
+                This is in addition to what is required for the replication type (eg.
+                SINGLE_RESOURCE, BATCH)
+              items:
+                type: string
+        extra_config:
+          type: object
+          additionalProperties: true
+          description: Used to expose extra configuration item when replicating a
+            specific resource. Those are extra keys that can be sent in the `replication_job_config`
+            object
     ReplicationConfigMock:
       type: object
       description: Mostly use for testing.
@@ -292,6 +379,20 @@ components:
         resource_identifier:
           type: string
           description: CloudControl identifier for resource.
+    ReplicationConfigBatch:
+      type: object
+      description: Specify the AWS resource to replicate by providing `resource_type`.
+        Most resources also require `resource_identifier`.
+      required:
+      - resource_type
+      properties:
+        resource_type:
+          type: string
+          description: 'Resource type in AWS CloudControl format. Example: AWS::IAM::Role'
+        resource_identifier:
+          type: string
+          description: Usually a string or a json string. more details for each resources
+            can be obtained by querying /_localstack/replicator/resources
     ReplicationRequest:
       additionalProperties: false
       type: object
@@ -345,9 +446,11 @@ components:
               type: string
           replication_job_config:
             description: Parameters for replication
+            additionalProperties: true
             oneOf:
             - $ref: '#/components/schemas/ReplicationConfigMock'
             - $ref: '#/components/schemas/ReplicationConfigSingle'
+            - $ref: '#/components/schemas/ReplicationConfigBatch'
     NetworkEffectsConfig:
       type: object
       description: Configuration for network effects.
