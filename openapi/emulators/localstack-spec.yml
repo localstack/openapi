@@ -8,13 +8,10 @@ info:
     checks, plugins, initialisation hooks, service introspection, and more.
   termsOfService: https://www.localstack.cloud/legal/tos
   title: LocalStack REST API
-  version: 2026.7.0
+  version: 2026.8.0
 externalDocs:
   description: LocalStack Documentation
   url: https://docs.localstack.cloud
-tags:
-- description: Available in LocalStack Pro
-  name: pro
 servers:
 - url: http://{host}:{port}
   variables:
@@ -23,59 +20,104 @@ servers:
     host:
       default: localhost.localstack.cloud
 components:
-  parameters:
-    ServiceName:
-      description: Service name
-      in: path
-      name: service
-      required: true
-      schema:
-        type: string
-    SesIdFilter:
-      description: Filter for the `id` field in SES message
-      in: query
-      name: id
-      required: false
-      schema:
-        type: string
-    SesEmailFilter:
-      description: Filter for the `source` field in SES message
-      in: query
-      name: email
-      required: false
-      schema:
-        type: string
-    SnsAccountId:
-      description: '`accountId` field of the resource'
-      in: query
-      name: accountId
-      required: false
-      schema:
-        default: '000000000000'
-        type: string
-    SnsEndpointArn:
-      description: '`endpointArn` field of the resource'
-      in: query
-      name: endpointArn
-      required: false
-      schema:
-        type: string
-    SnsPhoneNumber:
-      description: '`phoneNumber` field of the resource'
-      in: query
-      name: phoneNumber
-      required: false
-      schema:
-        type: string
-    SnsRegion:
-      description: '`region` field of the resource'
-      in: query
-      name: region
-      required: false
-      schema:
-        default: us-east-1
-        type: string
   schemas:
+    InitScripts:
+      additionalProperties: false
+      properties:
+        completed:
+          additionalProperties: false
+          properties:
+            BOOT:
+              type: boolean
+            READY:
+              type: boolean
+            SHUTDOWN:
+              type: boolean
+            START:
+              type: boolean
+          required:
+          - BOOT
+          - START
+          - READY
+          - SHUTDOWN
+          type: object
+        scripts:
+          items:
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+              stage:
+                type: string
+              state:
+                type: string
+            required:
+            - stage
+            - name
+            - state
+            type: object
+          type: array
+      required:
+      - completed
+      - scripts
+      type: object
+    InitScriptsStage:
+      additionalProperties: false
+      properties:
+        completed:
+          type: boolean
+        scripts:
+          items:
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+              stage:
+                type: string
+              state:
+                type: string
+            required:
+            - stage
+            - name
+            - state
+            type: object
+          type: array
+      required:
+      - completed
+      - scripts
+      type: object
+    SessionInfo:
+      additionalProperties: false
+      properties:
+        edition:
+          type: string
+        is_docker:
+          type: boolean
+        is_license_activated:
+          type: boolean
+        machine_id:
+          type: string
+        server_time_utc:
+          type: string
+        session_id:
+          type: string
+        system:
+          type: string
+        uptime:
+          type: integer
+        version:
+          type: string
+      required:
+      - version
+      - edition
+      - is_license_activated
+      - session_id
+      - machine_id
+      - system
+      - is_docker
+      - server_time_utc
+      - uptime
+      type: object
     StateResult:
       type: object
       description: The result of a state save operation.
@@ -890,104 +932,401 @@ components:
       required:
       - metrics
       type: object
-    InitScripts:
-      additionalProperties: false
-      properties:
-        completed:
-          additionalProperties: false
-          properties:
-            BOOT:
-              type: boolean
-            READY:
-              type: boolean
-            SHUTDOWN:
-              type: boolean
-            START:
-              type: boolean
-          required:
-          - BOOT
-          - START
-          - READY
-          - SHUTDOWN
-          type: object
-        scripts:
-          items:
-            additionalProperties: false
-            properties:
-              name:
-                type: string
-              stage:
-                type: string
-              state:
-                type: string
-            required:
-            - stage
-            - name
-            - state
-            type: object
-          type: array
-      required:
-      - completed
-      - scripts
-      type: object
-    InitScriptsStage:
-      additionalProperties: false
-      properties:
-        completed:
-          type: boolean
-        scripts:
-          items:
-            additionalProperties: false
-            properties:
-              name:
-                type: string
-              stage:
-                type: string
-              state:
-                type: string
-            required:
-            - stage
-            - name
-            - state
-            type: object
-          type: array
-      required:
-      - completed
-      - scripts
-      type: object
-    SessionInfo:
-      additionalProperties: false
-      properties:
-        edition:
-          type: string
-        is_docker:
-          type: boolean
-        is_license_activated:
-          type: boolean
-        machine_id:
-          type: string
-        server_time_utc:
-          type: string
-        session_id:
-          type: string
-        system:
-          type: string
-        uptime:
-          type: integer
-        version:
-          type: string
-      required:
-      - version
-      - edition
-      - is_license_activated
-      - session_id
-      - machine_id
-      - system
-      - is_docker
-      - server_time_utc
-      - uptime
-      type: object
+  parameters:
+    ServiceName:
+      description: Service name
+      in: path
+      name: service
+      required: true
+      schema:
+        type: string
+    SesIdFilter:
+      description: Filter for the `id` field in SES message
+      in: query
+      name: id
+      required: false
+      schema:
+        type: string
+    SesEmailFilter:
+      description: Filter for the `source` field in SES message
+      in: query
+      name: email
+      required: false
+      schema:
+        type: string
+    SnsAccountId:
+      description: '`accountId` field of the resource'
+      in: query
+      name: accountId
+      required: false
+      schema:
+        default: '000000000000'
+        type: string
+    SnsEndpointArn:
+      description: '`endpointArn` field of the resource'
+      in: query
+      name: endpointArn
+      required: false
+      schema:
+        type: string
+    SnsPhoneNumber:
+      description: '`phoneNumber` field of the resource'
+      in: query
+      name: phoneNumber
+      required: false
+      schema:
+        type: string
+    SnsRegion:
+      description: '`region` field of the resource'
+      in: query
+      name: region
+      required: false
+      schema:
+        default: us-east-1
+        type: string
 paths:
+  /_localstack/config:
+    get:
+      description: Get current LocalStack configuration
+      operationId: get_config
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Current LocalStack configuration
+        '404':
+          description: Not found
+    post:
+      description: Configuration option to update with new value
+      operationId: update_config_option
+      tags:
+      - localstack
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                value:
+                  type:
+                  - number
+                  - string
+                variable:
+                  pattern: ^[_a-zA-Z0-9]+$
+                  type: string
+              required:
+              - variable
+              - value
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                properties:
+                  value:
+                    type:
+                    - number
+                    - string
+                  variable:
+                    type: string
+                required:
+                - variable
+                - value
+                type: object
+          description: Configuration option is updated
+        '400':
+          content:
+            application/json: {}
+          description: Bad request
+        '404':
+          description: Not found
+  /_localstack/diagnose:
+    get:
+      description: Get diagnostics report
+      operationId: get_diagnostics
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                properties:
+                  config:
+                    type: object
+                  docker-dependent-image-hashes:
+                    type: object
+                  docker-dependent-image-hosts:
+                    type: object
+                  docker-inspect:
+                    type: object
+                  file-tree:
+                    type: object
+                  important-endpoints:
+                    type: object
+                  info:
+                    $ref: '#/components/schemas/SessionInfo'
+                  logs:
+                    additionalProperties: false
+                    properties:
+                      docker:
+                        type: string
+                    required:
+                    - docker
+                    type: object
+                  services:
+                    type: object
+                  usage:
+                    type: object
+                  version:
+                    additionalProperties: false
+                    properties:
+                      host:
+                        additionalProperties: false
+                        properties:
+                          kernel:
+                            type: string
+                        required:
+                        - kernel
+                        type: object
+                      image-version:
+                        additionalProperties: false
+                        properties:
+                          created:
+                            type: string
+                          id:
+                            type: string
+                          sha256:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - id
+                        - sha256
+                        - tag
+                        - created
+                        type: object
+                      localstack-version:
+                        additionalProperties: false
+                        properties:
+                          build-date:
+                            type:
+                            - string
+                            - 'null'
+                          build-git-hash:
+                            type:
+                            - string
+                            - 'null'
+                          build-version:
+                            type:
+                            - string
+                            - 'null'
+                        required:
+                        - build-date
+                        - build-git-hash
+                        - build-version
+                        type: object
+                    required:
+                    - image-version
+                    - localstack-version
+                    - host
+                    type: object
+                required:
+                - version
+                - info
+                - services
+                - config
+                - docker-inspect
+                - docker-dependent-image-hosts
+                - file-tree
+                - important-endpoints
+                - logs
+                - usage
+                type: object
+          description: Diagnostics report
+  /_localstack/health:
+    get:
+      description: Get available LocalStack features and AWS services
+      operationId: get_features_and_services
+      tags:
+      - localstack
+      parameters:
+      - allowEmptyValue: true
+        in: query
+        name: reload
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                properties:
+                  edition:
+                    enum:
+                    - community
+                    - pro
+                    - enterprise
+                    - unknown
+                    type: string
+                  features:
+                    type: object
+                  services:
+                    type: object
+                  version:
+                    type: string
+                required:
+                - edition
+                - services
+                - version
+                type: object
+          description: Available LocalStack features and AWS services
+    head:
+      tags:
+      - localstack
+      operationId: health
+      responses:
+        '200':
+          content:
+            text/plain: {}
+          description: ''
+    post:
+      description: Restart or terminate LocalStack session
+      operationId: manage_session
+      tags:
+      - localstack
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: false
+              properties:
+                action:
+                  enum:
+                  - restart
+                  - kill
+                  type: string
+              required:
+              - action
+              type: object
+        description: Action to perform
+        required: true
+      responses:
+        '200':
+          content:
+            text/plain: {}
+          description: Action was successful
+        '400':
+          content:
+            text/plain: {}
+          description: Bad request
+    put:
+      description: Store arbitrary data to in-memory state
+      operationId: store_data
+      tags:
+      - localstack
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Data to save
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                properties:
+                  status:
+                    type: string
+                required:
+                - status
+                type: object
+          description: Data was saved
+  /_localstack/info:
+    get:
+      description: Get information about the current LocalStack session
+      operationId: get_session_info
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+          description: Information about the current LocalStack session
+  /_localstack/init:
+    get:
+      description: Get information about init scripts
+      operationId: get_init_script_info
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitScripts'
+          description: Information about init scripts
+  /_localstack/init/{stage}:
+    get:
+      description: Get information about init scripts in a specific stage
+      operationId: get_init_script_info_stage
+      tags:
+      - localstack
+      parameters:
+      - in: path
+        name: stage
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitScriptsStage'
+          description: Information about init scripts in a specific stage
+        '404':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Stage not found
+  /_localstack/plugins:
+    get:
+      description: ''
+      operationId: get_plugins
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json: {}
+          description: ''
+  /_localstack/usage:
+    get:
+      description: ''
+      operationId: get_usage
+      tags:
+      - localstack
+      responses:
+        '200':
+          content:
+            application/json: {}
+          description: ''
   /_aws/cloudwatch/metrics/raw:
     get:
       description: Retrieve CloudWatch metrics
@@ -2400,345 +2739,3 @@ paths:
       tags:
       - pro
       - state
-  /_localstack/config:
-    get:
-      description: Get current LocalStack configuration
-      operationId: get_config
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-          description: Current LocalStack configuration
-        '404':
-          description: Not found
-    post:
-      description: Configuration option to update with new value
-      operationId: update_config_option
-      tags:
-      - localstack
-      requestBody:
-        content:
-          application/json:
-            schema:
-              additionalProperties: false
-              properties:
-                value:
-                  type:
-                  - number
-                  - string
-                variable:
-                  pattern: ^[_a-zA-Z0-9]+$
-                  type: string
-              required:
-              - variable
-              - value
-              type: object
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                properties:
-                  value:
-                    type:
-                    - number
-                    - string
-                  variable:
-                    type: string
-                required:
-                - variable
-                - value
-                type: object
-          description: Configuration option is updated
-        '400':
-          content:
-            application/json: {}
-          description: Bad request
-        '404':
-          description: Not found
-  /_localstack/diagnose:
-    get:
-      description: Get diagnostics report
-      operationId: get_diagnostics
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                properties:
-                  config:
-                    type: object
-                  docker-dependent-image-hashes:
-                    type: object
-                  docker-dependent-image-hosts:
-                    type: object
-                  docker-inspect:
-                    type: object
-                  file-tree:
-                    type: object
-                  important-endpoints:
-                    type: object
-                  info:
-                    $ref: '#/components/schemas/SessionInfo'
-                  logs:
-                    additionalProperties: false
-                    properties:
-                      docker:
-                        type: string
-                    required:
-                    - docker
-                    type: object
-                  services:
-                    type: object
-                  usage:
-                    type: object
-                  version:
-                    additionalProperties: false
-                    properties:
-                      host:
-                        additionalProperties: false
-                        properties:
-                          kernel:
-                            type: string
-                        required:
-                        - kernel
-                        type: object
-                      image-version:
-                        additionalProperties: false
-                        properties:
-                          created:
-                            type: string
-                          id:
-                            type: string
-                          sha256:
-                            type: string
-                          tag:
-                            type: string
-                        required:
-                        - id
-                        - sha256
-                        - tag
-                        - created
-                        type: object
-                      localstack-version:
-                        additionalProperties: false
-                        properties:
-                          build-date:
-                            type:
-                            - string
-                            - 'null'
-                          build-git-hash:
-                            type:
-                            - string
-                            - 'null'
-                          build-version:
-                            type:
-                            - string
-                            - 'null'
-                        required:
-                        - build-date
-                        - build-git-hash
-                        - build-version
-                        type: object
-                    required:
-                    - image-version
-                    - localstack-version
-                    - host
-                    type: object
-                required:
-                - version
-                - info
-                - services
-                - config
-                - docker-inspect
-                - docker-dependent-image-hosts
-                - file-tree
-                - important-endpoints
-                - logs
-                - usage
-                type: object
-          description: Diagnostics report
-  /_localstack/health:
-    get:
-      description: Get available LocalStack features and AWS services
-      operationId: get_features_and_services
-      tags:
-      - localstack
-      parameters:
-      - allowEmptyValue: true
-        in: query
-        name: reload
-        required: false
-        schema:
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                properties:
-                  edition:
-                    enum:
-                    - community
-                    - pro
-                    - enterprise
-                    - unknown
-                    type: string
-                  features:
-                    type: object
-                  services:
-                    type: object
-                  version:
-                    type: string
-                required:
-                - edition
-                - services
-                - version
-                type: object
-          description: Available LocalStack features and AWS services
-    head:
-      tags:
-      - localstack
-      operationId: health
-      responses:
-        '200':
-          content:
-            text/plain: {}
-          description: ''
-    post:
-      description: Restart or terminate LocalStack session
-      operationId: manage_session
-      tags:
-      - localstack
-      requestBody:
-        content:
-          application/json:
-            schema:
-              additionalProperties: false
-              properties:
-                action:
-                  enum:
-                  - restart
-                  - kill
-                  type: string
-              required:
-              - action
-              type: object
-        description: Action to perform
-        required: true
-      responses:
-        '200':
-          content:
-            text/plain: {}
-          description: Action was successful
-        '400':
-          content:
-            text/plain: {}
-          description: Bad request
-    put:
-      description: Store arbitrary data to in-memory state
-      operationId: store_data
-      tags:
-      - localstack
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Data to save
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                additionalProperties: false
-                properties:
-                  status:
-                    type: string
-                required:
-                - status
-                type: object
-          description: Data was saved
-  /_localstack/info:
-    get:
-      description: Get information about the current LocalStack session
-      operationId: get_session_info
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionInfo'
-          description: Information about the current LocalStack session
-  /_localstack/init:
-    get:
-      description: Get information about init scripts
-      operationId: get_init_script_info
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InitScripts'
-          description: Information about init scripts
-  /_localstack/init/{stage}:
-    get:
-      description: Get information about init scripts in a specific stage
-      operationId: get_init_script_info_stage
-      tags:
-      - localstack
-      parameters:
-      - in: path
-        name: stage
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InitScriptsStage'
-          description: Information about init scripts in a specific stage
-        '404':
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: Stage not found
-  /_localstack/plugins:
-    get:
-      description: ''
-      operationId: get_plugins
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json: {}
-          description: ''
-  /_localstack/usage:
-    get:
-      description: ''
-      operationId: get_usage
-      tags:
-      - localstack
-      responses:
-        '200':
-          content:
-            application/json: {}
-          description: ''
