@@ -48,10 +48,6 @@ runs:
         path: localstack-pro
         token: ${{ inputs.pro-token }}
 
-    - name: Debug
-      shell: bash
-      run: ls -la
-
     - name: Install Python dependencies for Pro
       working-directory: localstack-pro
       shell: bash
