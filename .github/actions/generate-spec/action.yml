@@ -49,6 +49,7 @@ runs:
         token: ${{ inputs.pro-token }}
 
     - name: Debug
+      shell: bash
       run: ls -la
 
     - name: Install Python dependencies for Pro
