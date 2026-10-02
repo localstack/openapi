@@ -49,12 +49,12 @@ runs:
         token: ${{ inputs.pro-token }}
 
     - name: Install Python dependencies for Pro
-      working-directory: localstack-pro/localstack-pro-aws/
+      working-directory: localstack-pro
       shell: bash
       run: make install
 
     - name: Generate spec
       shell: bash
       run: |
-        source localstack-pro/localstack-pro-aws/.venv/bin/activate
+        source localstack-pro/.venv/bin/activate
         python bin/update-aws-spec.py ${{ inputs.latest == 'true' && '--latest' || '' }}
