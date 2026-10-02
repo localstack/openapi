@@ -30,26 +30,26 @@ jobs:
           pro-ref: v${{ env.release }}
           pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
 
-      - name: Commit Release Version
-        env:
-          DEPENDENCY_FILE: "openapi/"
-          RELEASE_VERSION: ${{ env.release }}
-        run: |
-          git add "${DEPENDENCY_FILE}"
-          git commit --allow-empty -m "Release: v${RELEASE_VERSION}"
-          git tag -a "v${RELEASE_VERSION}" -m "Release: v${RELEASE_VERSION}"
-          git push --follow-tags  
+      # - name: Commit Release Version
+      #   env:
+      #     DEPENDENCY_FILE: "openapi/"
+      #     RELEASE_VERSION: ${{ env.release }}
+      #   run: |
+      #     git add "${DEPENDENCY_FILE}"
+      #     git commit --allow-empty -m "Release: v${RELEASE_VERSION}"
+      #     git tag -a "v${RELEASE_VERSION}" -m "Release: v${RELEASE_VERSION}"
+      #     git push --follow-tags  
 
-      - name: Show Git Modifications
-        run: |
-          git log --oneline -n 2
-          git show HEAD
+      # - name: Show Git Modifications
+      #   run: |
+      #     git log --oneline -n 2
+      #     git show HEAD
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: v${{ env.release }}
-          files: |
-            openapi/emulators/localstack-spec.yml
-          tag_name: v${{ env.release }}
-          draft: true
+      # - name: Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     name: v${{ env.release }}
+      #     files: |
+      #       openapi/emulators/localstack-spec.yml
+      #     tag_name: v${{ env.release }}
+      #     draft: true
