@@ -17,7 +17,7 @@ jobs:
       - name: "Release Python SDK"
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN_SDK_PY_DISPATCH }}
           repository: localstack/localstack-sdk-python
           event-type: release-sdk
           client-payload: '{"version": "${{ env.VERSION }}"}'
