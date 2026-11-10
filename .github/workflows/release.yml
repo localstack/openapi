@@ -28,7 +28,7 @@ jobs:
         uses: ./.github/actions/generate-spec
         with:
           pro-ref: v${{ env.release }}
-          pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          pro-token: ${{ secrets.GH_TOKEN_READ_LS_PRO }}
 
       - name: Commit Release Version
         env:

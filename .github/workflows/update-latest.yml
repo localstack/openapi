@@ -16,7 +16,7 @@ jobs:
         uses: ./.github/actions/generate-spec
         with:
           pro-ref: ${{ github.event.client_payload.ref }}
-          pro-token: ${{ secrets.PRO_GITHUB_TOKEN }}
+          pro-token: ${{ secrets.GH_TOKEN_READ_LS_PRO }}
           fallback-to-main: "true"
           latest: "true"
 
