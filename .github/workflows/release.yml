@@ -1,6 +1,7 @@
 name: Release OpenAPI spec
 on:
   repository_dispatch:
+    types: [release-openapi]
   workflow_dispatch:
     inputs:
       releaseVersion:
